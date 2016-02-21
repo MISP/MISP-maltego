@@ -27,7 +27,7 @@ def retrieveEvents(mt, enFilter, enValue):
     for e in result['response']:
         eid = e['Event']['id']
         einfo = e['Event']['info']
-        eorgc = e['Event']['orgc']
+        eorgc = e['Event']['Orgc']['name']
         me = MaltegoEntity('maltego.MISPEvent',eid);
         me.addAdditionalFields('EventLink', 'EventLink', False, BASE_URL + '/events/view/' + eid )
         me.addAdditionalFields('Org', 'Org', False, eorgc)
