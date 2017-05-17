@@ -6,6 +6,8 @@
 # Date: 24/11/2015
 #############################################
 import sys
+import warnings
+warnings.simplefilter("ignore")
 from misp_util import *
 from pymisp import PyMISP
 import json
@@ -17,13 +19,13 @@ attribute2filter = {
 }
 
 if __name__ == '__main__':
-        enValue = sys.argv[1]
-        enType = sys.argv[0].split('_')[-1].split('2')[0] #misp_enType2event.py
-        mt = MaltegoTransform()
-        mt.addUIMessage("[INFO] " + enType + " to MISP Event")
-        try:
-            retrieveEvents(mt, attribute2filter[enType], enValue)
-        except Exception as e:
-            mt.addUIMessage("[Error] " + str(e))
-        mt.returnOutput()
+    enValue = sys.argv[1]
+    enType = sys.argv[0].split('_')[-1].split('2')[0] #misp_enType2event.py
+    mt = MaltegoTransform()
+    mt.addUIMessage("[INFO] " + enType + " to MISP Event")
+    try:
+        retrieveEvents(mt, attribute2filter[enType], enValue)
+    except Exception as e:
+        mt.addUIMessage("[Error] " + str(e))
+    mt.returnOutput()
 

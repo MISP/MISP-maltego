@@ -18,21 +18,23 @@ if __name__ == '__main__':
         event_id = sys.argv[1]
         argType = sys.argv[0].split('.')[0].split('2')[1] # misp_event2argType.py
         misp = init()
+        mt = MaltegoTransform()
         try:
-            event = misp.get_event(event_id)
-            event_json = event.json()
-            mt = MaltegoTransform()
-	    for attribute in event_json['Event']["Attribute"]:
+            event_json = misp.get_event(event_id)
+            for attribute in event_json['Event']["Attribute"]:
                 value = attribute["value"]
-		aType = attribute["type"]
+                aType = attribute["type"]
+                comment = attribute['comment']
                 if aType in type2attribute[argType]:
-		    if aType in filename_pipe_hash_type:
+                    if aType in filename_pipe_hash_type:
                         h = value.split('|')[1].strip()
                         me = MaltegoEntity(argType2enType[argType], h)
                         mt.addEntityToMessage(me);   
                     else:
                         me = MaltegoEntity(argType2enType[argType], value)
-		        mt.addEntityToMessage(me);
+                    if 0 < len(comment) < 32:
+                        me.addAdditionalFields('notes#', 'notes', False, comment)
+                    mt.addEntityToMessage(me);
         except Exception as e:
-	    mt.addUIMessage("[ERROR]  " + str(e))
+            mt.addUIMessage("[ERROR]  " + str(e))
         mt.returnOutput()
