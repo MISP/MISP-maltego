@@ -1,6 +1,13 @@
 # Quick start guide
 This is a Maltego MISP integration tool allowing you to view (read-only) data from a MISP instance. 
-Currently supported: Event, Attribute, Object, Tag, Taxonomy, Galaxy and relations.
+
+Currently supported MISP elements are : Event, Attribute, Object, Tag, Taxonomy, Galaxy and relations.
+
+Once installed you can start by creating a `MISPEvent` entity, then load the transform `EventToAttributes`.
+
+Alternatively initiate a transform on an existing Maltego entity.
+The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`, `File`, `Hash`, `IPv4Address`, `NSRecord`, `Person`, `PhoneNumber`, `URL`, `Website`
+
 
 Dependencies:
 * [PyMISP](https://github.com/MISP/PyMISP)
@@ -23,14 +30,8 @@ misp_key = verysecretkey
 misp_verify = True
 misp_debug = False
 ``` 
-
-## Usage
-Once installed you will have custom Maltego entities in the MISP group.
-You can start by creating a `MISPEvent`, then load the transform `EventToAttributes`.
-Or by just loading a transform on an existing Maltego entity.
-The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`, `File`, `Hash`, `IPv4Address`, `NSRecord`, `Person`, `PhoneNumber`, `URL`, `Website`
-
-![Screenshot](https://github.com/MISP/MISP-maltego/doc/screenshot.png)
+## Screenshot
+![Screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/screenshot.png)
 
 ## License
 This software is licensed under [GNU Affero General Public License version 3](http://www.gnu.org/licenses/agpl-3.0.html)
