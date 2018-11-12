@@ -15,7 +15,7 @@ Dependencies:
 
 ## Installation:
 ```
-git clone http://github.com/MISP/MISP-maltego
+git clone https://github.com/MISP/MISP-maltego.git
 cd MISP-maltego
 cp  src/MISP_maltego/resources/etc/MISP_maltego.conf MISP_maltego.conf
 python3 setup.py install --user && canari create-profile MISP_maltego
