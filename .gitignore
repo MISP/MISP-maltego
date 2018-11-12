@@ -1,0 +1,11 @@
+*.py[co]
+*.*~
+*.py~
+# Packages
+*.egg
+*.egg-info
+*.*.swp
+
+# Locally genenerated mtz
+/*.mtz
+

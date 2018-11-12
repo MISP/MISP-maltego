@@ -1,30 +1,94 @@
-# MISP-Maltego
-Set of Maltego transforms to inferface with a MISP instance
+# Quick start guide
+This is a Maltego MISP integration tool allowing you to view (read-only) data from a MISP instance. 
+Currently supported: Event, Attribute, Object, Tag, Taxonomy, Galaxy and relations.
 
-# Prerequisites
-- MISP instance API access
-- PyMISP
+Dependencies:
+* [PyMISP](https://github.com/MISP/PyMISP)
+* [Canari3](https://github.com/redcanari/canari3)
 
-# INSTALL
-
-- Edit `misp_util.py` and set BASE_URL and API_KEY variables with your MISP base URL and MISP API key.
-
-- Create symbolic links to `misp_domain2event.py` and `misp_event2domain.py` in the same directory.
+## Installation:
 ```
-for i in misp_email2event.py misp_email-subject2event.py misp_ip2event.py misp_hash2event.py ; do ln -s misp_domain2event.py $i; done
-for i in misp_event2email.py misp_event2email-subject.py misp_event2hash.py misp_event2ip.py ; do ln -s misp_event2domain.py $i; done
+git clone http://github.com/MISP/MISP-maltego
+cd MISP-maltego
+cp  src/MISP_maltego/resources/etc/MISP_maltego.conf MISP_maltego.conf
+python3 setup.py install --user && canari create-profile MISP_maltego
+```
+Import the profile/transforms `MISP_maltego.mtz` in Maltego.  (Import|Export > Import Config)
+
+Edit `$HOME/.canari/MISP_maltego.conf` and enter your `misp_url` and `misp_key`
+```
+[MISP_maltego.local]
+misp_url = https://a.b.c.d
+misp_key = verysecretkey
+misp_verify = True
+misp_debug = False
+``` 
+
+## Usage
+Once installed you will have custom Maltego entities in the MISP group.
+You can start by creating a `MISPEvent`, then load the transform `EventToAttributes`.
+Or by just loading a transform on an existing Maltego entity.
+The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`, `File`, `Hash`, `IPv4Address`, `NSRecord`, `Person`, `PhoneNumber`, `URL`, `Website`
+
+![Screenshot](https://github.com/MISP/MISP-maltego/doc/screenshot.png)
+
+## License
+This software is licensed under [GNU Affero General Public License version 3](http://www.gnu.org/licenses/agpl-3.0.html)
+
+* Copyright (C) 2018 Christophe Vandeplas
+
+Note: Before being rewritten from scratch this project was maintained by Emmanuel Bouillon. The code is available in the `v1` branch.
+
+
+<hr />
+The Canari welcome message:
+# README - MISP_maltego
+
+Welcome to Canari. You might be wondering what all these files are about. Before you can use the power of
+`canari create-profile` you needed to create a transform package and that's exactly what you did here! I've given you a
+directory structure to use in the following manner:
+
+* `src/MISP_maltego` directory is where all your stuff goes in terms of auxiliary modules that you may need for 
+  your modules
+* `src/MISP_maltego/transforms` directory is where all your transform modules should be placed. An example
+  `helloworld` transform is there for your viewing pleasure.
+* `src/MISP_maltego/transforms/common` directory is where you can put some common code for your transforms like
+  result parsing, entities, etc.
+* `src/MISP_maltego/transforms/common/entities.py` is where you define your custom entities. Take a look at the
+  examples provided if you want to play around with custom entities.
+* `maltego/` is where you can store your Maltego entity exports.
+* `src/MISP_maltego/resources/maltego` directory is where your `entities.mtz` and `*.machine` files can be
+  stored for auto install and uninstall.
+* `src/MISP_maltego/resources/external` directory is where you can place non-Python transforms written in other
+  languages.
+
+If you're going to add a new transform in the transforms directory, remember to update the `__all__` variable in
+`src/MISP_maltego/transforms/__init__.py`. Otherwise, `canari install-package` won't attempt to install the
+transform. Alternatively, `canari create-transform <transform name>` can be used within the
+`src/MISP_maltego/transforms` directory to generate a transform module and have it automatically added to the
+`__init__.py` file, like so:
+
+```bash
+$ canari create-transform foo
 ```
 
-- Import transforms in Maltego as follow (for instance):
+To test your transform, simply `cd` into the src directory and run `canari debug-transform`, like so:
 
-  * `misp_ip2event.py`: [MISP] IP to Event / Returns MISPEvent entities containing the corresponding IP attribute
-  * `misp_domain2event.py`: [MISP] Domain to Event / Returns MISPEvent entities containing the corresponding Domain attribute
-  * `misp_hash2event.py`: [MISP] Hash to Event / Returns MISPEvent entities containing the corresponding Hash attribute
-  * `misp_email2event.py`: [MISP] Email address to Event / Returns MISPEvent entities containing the corresponding Email address attribute
-  * `misp_email-subject2event.py`: [MISP] Email subject to Event / Returns MISPEvent entities containing the corresponding Email subject attribute
-  * `misp_event2ip.py`: [MISP] Event to IP attribute / Returns the IP attributes belonging to an event
-  * `misp_event2domain.py`: [MISP] Event to Domain attribute / Returns Domain attributes belonging to an event
-  * `misp_event2hash.py`: [MISP] Event to Hash attribute / Returns Hash attributes belonging to an event
-  * `misp_event2email.py`: [MISP] Event to Email address attribute / Returns Email address attributes belonging to an event
-  * `misp_event2email-subject.py`: [MISP] Event to Email subject attribute / Returns Email subject attributes belonging to an event
-  * `misp_getEventInfo.py`: [MISP] Get Event Info / Adorns the Event with Info as notes
+```bash
+$ canari debug-transform MISP_maltego.transforms.helloworld.HelloWorld Phil
+%50
+D:This was pointless!
+%100
+`- MaltegoTransformResponseMessage:
+  `- Entities:
+    `- Entity:  {'Type': 'test.MyTestEntity'}
+      `- Value: Hello Phil!
+      `- Weight: 1
+      `- AdditionalFields:
+        `- Field: 2 {'DisplayName': 'Field 1', 'Name': 'test.field1', 'MatchingRule': 'strict'}
+        `- Field: test {'DisplayName': 'Field N', 'Name': 'test.fieldN', 'MatchingRule': 'strict'}
+```
+
+Cool right? If you have any further questions don't hesitate to drop us a line;)
+
+Have fun!
