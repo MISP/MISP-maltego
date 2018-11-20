@@ -1,4 +1,4 @@
-from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File
+from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Hashtag, Company, Alias, Twitter
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent
@@ -82,3 +82,19 @@ class EmailAddressToEvent(AttributeToEvent):
 
 class FileToEvent(AttributeToEvent):
     input_type = File
+
+
+class HashtagToEvent(AttributeToEvent):
+    input_type = Hashtag
+
+
+class AliasToEvent(AttributeToEvent):
+    input_type = Alias
+
+
+class TwitterToEvent(AttributeToEvent):
+    input_type = Twitter
+
+
+class CompanyToEvent(AttributeToEvent):
+    input_type = Company
