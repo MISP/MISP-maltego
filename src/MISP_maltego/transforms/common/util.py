@@ -1,4 +1,4 @@
-from canari.maltego.entities import Unknown, Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag
+from canari.maltego.entities import Unknown, Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
 from canari.maltego.message import UIMessageType, UIMessage, Label
 from pymisp import PyMISP
@@ -76,7 +76,19 @@ mapping_misp_to_maltego = {
     'url': [URL],
 
     'whois-registrant-email': [EmailAddress],
-
+    'country-of-residence': [Location],
+    'github-organisation': [Company],
+    'github-username': [Alias],
+    'imphash': [Hash],
+    'jabber-id': [Alias],
+    'passport-country': [Location],
+    'place-of-birth': [Location],
+    'port': [Port],
+    'target-email': [EmailAddress],
+    'target-location': [Location],
+    'target-org': [Company],
+    'target-user': [Alias],
+    'twitter-id': [Twitter],
     # object mappings
     'nameserver': [NSRecord],
     # FIXME add more object mappings
