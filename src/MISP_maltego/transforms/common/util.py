@@ -72,6 +72,7 @@ mapping_misp_to_maltego = {
     'sha512': [Hash],
     'sha512/224': [Hash],
     'sha512/256': [Hash],
+    'ssdeep': [Hash],
     'uri': [URL],
     'url': [URL],
 
