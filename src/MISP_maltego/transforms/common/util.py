@@ -3,8 +3,10 @@ from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPG
 from canari.maltego.message import UIMessageType, UIMessage, Label
 from pymisp import PyMISP
 import json
-import tempfile
 import os
+import os.path
+import tempfile
+import time
 
 
 # mapping_maltego_to_misp = {
@@ -250,10 +252,16 @@ def galaxy_update_local_copy(force=False):
     import requests
     from zipfile import ZipFile
 
-    # FIXME put some aging and automatic re-downloading
+    # some aging and automatic re-downloading
     if not os.path.exists(local_path_root):
         os.mkdir(local_path_root)
         force = True
+    if not os.path.exists(local_path_uuid_mapping):
+        force = True
+    else:
+        # force update if cache is older thn 24 hours
+        if time.time() - os.path.getmtime(local_path_uuid_mapping) > 60 * 60 * 24:
+            force = True
 
     if force:
         # download the latest zip of the public galaxy
