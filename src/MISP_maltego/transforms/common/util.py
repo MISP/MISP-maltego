@@ -1,6 +1,6 @@
 from canari.maltego.entities import Unknown, Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
-from canari.maltego.message import UIMessageType, UIMessage, Label
+from canari.maltego.message import UIMessageType, UIMessage, Label, LinkStyle
 from pymisp import PyMISP
 import json
 import os
@@ -120,19 +120,23 @@ def entity_obj_to_entity(entity_obj, v, t, **kwargs):
     return entity_obj(v, **kwargs)
 
 
-def attribute_to_entity(a):
+def attribute_to_entity(a, link_label=None):
     # prepare some attributes to a better form
     a['data'] = None  # empty the file content as we really don't need this here  # FIXME feature request for misp.get_event() to not get attachment content
     if a['type'] == 'malware-sample':
         a['type'] = 'filename|md5'
-    if a['type'] == 'regkey|value':
+    if a['type'] == 'regkey|value':  # FIXME regkey|value => needs to be a special non-combined object
         a['type'] = 'regkey'
-    # FIXME regkey|value => needs to be a special non-combined object
+
+    # special cases
+    if a['type'] in ('url', 'uri'):
+        yield(URL(url=a['value'], link_label=link_label))
+        return
 
     # attribute is from an object, and a relation gives better understanding of the type of attribute
     if a.get('object_relation') and mapping_misp_to_maltego.get(a['object_relation']):
         entity_obj = mapping_misp_to_maltego[a['object_relation']][0]
-        yield entity_obj(a['value'], labels=[Label('comment', a['comment'])])
+        yield entity_obj(a['value'], labels=[Label('comment', a.get('comment'))], link_label=link_label)
 
     # combined attributes
     elif '|' in a['type']:
@@ -140,29 +144,29 @@ def attribute_to_entity(a):
         v_1, v_2 = a['value'].split('|')
         if t_1 in mapping_misp_to_maltego:
             entity_obj = mapping_misp_to_maltego[t_1][0]
-            labels = [Label('comment', a['comment'])]
+            labels = [Label('comment', a.get('comment'))]
             if entity_obj == File:
                 labels.append(Label('hash', v_2))
-            yield entity_obj_to_entity(entity_obj, v_1, t_1, labels=labels)  # TODO change the comment to include the second part of the regkey
+            yield entity_obj_to_entity(entity_obj, v_1, t_1, labels=labels, link_label=link_label)  # TODO change the comment to include the second part of the regkey
         else:
             yield UIMessage("Type {} of combined type {} not supported for attribute: {}".format(t_1, a['type'], a), type=UIMessageType.Inform)
         if t_2 in mapping_misp_to_maltego:
             entity_obj = mapping_misp_to_maltego[t_2][0]
-            labels = [Label('comment', a['comment'])]
+            labels = [Label('comment', a.get('comment'))]
             if entity_obj == Hash:
                 labels.append(Label('filename', v_1))
-            yield entity_obj_to_entity(entity_obj, v_2, t_2, labels=labels)  # TODO change the comment to include the first part of the regkey
+            yield entity_obj_to_entity(entity_obj, v_2, t_2, labels=labels, link_label=link_label)  # TODO change the comment to include the first part of the regkey
         else:
             yield UIMessage("Type {} of combined type {} not supported for attribute: {}".format(t_2, a['type'], a), type=UIMessageType.Inform)
 
     # normal attributes
     elif a['type'] in mapping_misp_to_maltego:
         entity_obj = mapping_misp_to_maltego[a['type']][0]
-        yield entity_obj_to_entity(entity_obj, a['value'], a['type'], labels=[Label('comment', a['comment'])])
+        yield entity_obj_to_entity(entity_obj, a['value'], a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label)
 
     # not supported in our maltego mapping
     else:
-        yield Unknown(a['value'], type=a['type'], labels=[Label('comment', a['comment'])])
+        yield Unknown(a['value'], type=a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label)
         yield UIMessage("Type {} not fully supported for attribute: {}".format(a['type'], a), type=UIMessageType.Inform)
 
     if 'Galaxy' in a:
@@ -176,16 +180,18 @@ def attribute_to_entity(a):
                 if t['name'].startswith('misp-galaxy'):
                     continue
                 yield Hashtag(t['name'])
+    # TODO : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
 
-def object_to_entity(o):
+def object_to_entity(o, link_label=None):
     return MISPObject(
         o['name'],
         uuid=o['uuid'],
         event_id=int(o['event_id']),
         meta_category=o.get('meta_category'),
-        description=o['description'],
-        comment=o['comment']
+        description=o.get('description'),
+        comment=o.get('comment'),
+        link_label=link_label
     )
 
 
@@ -200,6 +206,19 @@ def object_to_attributes(o):
     for a in o['Attribute']:
         for item in attribute_to_entity(a):
             yield item
+
+    # process relationships between objects and attributes
+    if 'ObjectReference' in o:
+        for ref in o['ObjectReference']:
+            # the reference is an Object
+            if ref.get('Object'):
+                ref['Object']['event_id'] = ref['event_id']   # FIXME remove this ugly workaround - object can't be requested directly from MISP, and to find a full object we need the event_id
+                yield object_to_entity(ref['Object'], link_label=ref['relationship_type'])
+            # the reference is an Attribute
+            if ref.get('Attribute'):
+                ref['Attribute']['event_id'] = ref['event_id']   # FIXME remove this ugly workaround - object can't be requested directly from MISP, and to find a full object we need the event_id
+                for item in attribute_to_entity(ref['Attribute'], link_label=ref['relationship_type']):
+                    yield item
 
 
 def get_attribute_in_object(o, attribute_type, drop=False):

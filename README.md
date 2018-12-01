@@ -1,7 +1,7 @@
 # Quick start guide
 This is a Maltego MISP integration tool allowing you to view (read-only) data from a MISP instance. 
 
-Currently supported MISP elements are : Event, Attribute, Object, Tag, Taxonomy, Galaxy and relations.
+Currently supported MISP elements are : Event, Attribute, Object (incl relations), Tag, Taxonomy, Galaxy (incl relations).
 
 Once installed you can start by creating a `MISPEvent` entity, then load the transform `EventToAttributes`.
 

@@ -37,11 +37,11 @@ class MISPObject(Entity):
 
     icon_url = 'file://MISP_maltego/resources/images/MISPObject.png'
     uuid = StringEntityField('uuid', display_name='UUID')
-    event_id = IntegerEntityField('event_id', display_name='Event ID')
+    event_id = IntegerEntityField('event_id', display_name='Event ID')  # FIXME remove this once MISP provides objects correctly when requesting only the object.  See https://github.com/MISP/MISP/issues/3801
     name = StringEntityField('name', display_name='Name', is_value=True)
-    meta_category = StringEntityField('meta_category', display_name='Meta Category')
-    description = StringEntityField('description', display_name='Description')
-    comment = StringEntityField('comment', display_name='Comment')
+    meta_category = StringEntityField('meta_category', display_name='Meta Category', matching_rule=MatchingRule.Loose)
+    description = StringEntityField('description', display_name='Description', matching_rule=MatchingRule.Loose)
+    comment = StringEntityField('comment', display_name='Comment', matching_rule=MatchingRule.Loose)
 
 
 class MISPGalaxy(Entity):
