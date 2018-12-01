@@ -3,6 +3,8 @@ from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
 from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes
+from canari.maltego.message import LinkStyle
+
 import json
 
 __author__ = 'Christophe Vandeplas'
@@ -33,7 +35,7 @@ class EventToAttributes(Transform):
         if not event_json.get('Event'):
             return response
         for e in event_json['Event']['RelatedEvent']:
-            response += event_to_entity(e)
+            response += event_to_entity(e, link_style=LinkStyle.DashDot)
         for a in event_json['Event']["Attribute"]:
             for entity in attribute_to_entity(a):
                 if entity:

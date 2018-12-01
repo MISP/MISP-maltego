@@ -214,8 +214,8 @@ def get_attribute_in_object(o, attribute_type, drop=False):
     return found_attribute
 
 
-def event_to_entity(e):
-    return MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'])
+def event_to_entity(e, link_style=LinkStyle.Normal):
+    return MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_style=link_style)
 
 
 def galaxycluster_to_entity(c, link_label=None):
