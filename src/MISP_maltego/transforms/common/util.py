@@ -95,13 +95,20 @@ mapping_misp_to_maltego = {
     'twitter-id': [Twitter],
     # object mappings
     'nameserver': [NSRecord],
-    # FIXME add more object mappings
+    # TODO add more object mappings
     # custom types created internally for technical reasons
     # 'rekey_value': [Unknown]
 }
 
+misp_connection = None
 
-def get_misp_connection(config):
+
+def get_misp_connection(config=None):
+    global misp_connection
+    if misp_connection:
+        return misp_connection
+    if not config:
+        raise Exception("ERROR: MISP connection not yet established, and config not provided as parameter.")
     if config['MISP_maltego.local.misp_verify'] in ['True', 'true', 1, 'yes', 'Yes']:
         misp_verify = True
     else:
@@ -110,12 +117,13 @@ def get_misp_connection(config):
         misp_debug = True
     else:
         misp_debug = False
-    return PyMISP(config['MISP_maltego.local.misp_url'], config['MISP_maltego.local.misp_key'], misp_verify, 'json', misp_debug)
+    misp_connection = PyMISP(config['MISP_maltego.local.misp_url'], config['MISP_maltego.local.misp_key'], misp_verify, 'json', misp_debug)
+    return misp_connection
 
 
 def entity_obj_to_entity(entity_obj, v, t, **kwargs):
     if entity_obj == Hash:
-        return entity_obj(v, _type=t, **kwargs)  # FIXME type is conflicting with type of Entity, Report this as bug see line 326 /usr/local/lib/python3.5/dist-packages/canari/maltego/entities.py
+        return entity_obj(v, _type=t, **kwargs)  # LATER type is conflicting with type of Entity, Report this as bug see line 326 /usr/local/lib/python3.5/dist-packages/canari/maltego/entities.py
 
     return entity_obj(v, **kwargs)
 
@@ -125,7 +133,7 @@ def attribute_to_entity(a, link_label=None):
     a['data'] = None  # empty the file content as we really don't need this here  # FIXME feature request for misp.get_event() to not get attachment content
     if a['type'] == 'malware-sample':
         a['type'] = 'filename|md5'
-    if a['type'] == 'regkey|value':  # FIXME regkey|value => needs to be a special non-combined object
+    if a['type'] == 'regkey|value':  # LATER regkey|value => needs to be a special non-combined object
         a['type'] = 'regkey'
 
     # special cases
@@ -180,12 +188,51 @@ def attribute_to_entity(a, link_label=None):
                 if t['name'].startswith('misp-galaxy'):
                     continue
                 yield Hashtag(t['name'])
-    # TODO : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
+    # LATER : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
 
 def object_to_entity(o, link_label=None):
+    # Generate a human readable display-name:
+    # - find the first RequiredOneOf that exists
+    # - if none, use the first RequiredField
+    # LATER further finetune the human readable version of this object
+    misp = get_misp_connection()
+    o_template = misp.get_object_template_id(o['template_uuid'])
+    human_readable = None
+    try:
+        found = False
+        while not found:  # the while loop is broken once something is found, or the requiredOneOf has no elements left
+            required_ote_type = o_template['ObjectTemplate']['requirements']['requiredOneOf'].pop(0)
+            for ote in o_template['ObjectTemplateElement']:
+                if ote['object_relation'] == required_ote_type:
+                    required_a_type = ote['type']
+                    break
+            for a in o['Attribute']:
+                if a['type'] == required_a_type:
+                    human_readable = '{}: {}'.format(o['name'], a['value'])
+                    found = True
+                    break
+    except Exception:
+        pass
+    if not human_readable:
+        try:
+            found = False
+            parts = []
+            for required_ote_type in o_template['ObjectTemplate']['requirements']['required']:
+                for ote in o_template['ObjectTemplateElement']:
+                    if ote['object_relation'] == required_ote_type:
+                        required_a_type = ote['type']
+                        break
+                for a in o['Attribute']:
+                    if a['type'] == required_a_type:
+                        parts.append(a['value'])
+                        break
+            human_readable = '{}: {}'.format(o['name'], '|'.join(parts))
+        except Exception:
+            human_readable = o['name']
+            pass
     return MISPObject(
-        o['name'],
+        human_readable,
         uuid=o['uuid'],
         event_id=int(o['event_id']),
         meta_category=o.get('meta_category'),
@@ -195,7 +242,7 @@ def object_to_entity(o, link_label=None):
     )
 
 
-def object_to_attributes(o):
+def object_to_attributes(o, e):
     # first process attributes from an object that belong together (eg: first-name + last-name), and remove them from the list
     if o['name'] == 'person':
         first_name = get_attribute_in_object(o, 'first-name', drop=True).get('value')
@@ -212,13 +259,20 @@ def object_to_attributes(o):
         for ref in o['ObjectReference']:
             # the reference is an Object
             if ref.get('Object'):
-                ref['Object']['event_id'] = ref['event_id']   # FIXME remove this ugly workaround - object can't be requested directly from MISP, and to find a full object we need the event_id
-                yield object_to_entity(ref['Object'], link_label=ref['relationship_type'])
+                # get the full object in the event, as our objectReference included does not contain everything we need
+                sub_object = get_object_in_event(ref['Object']['uuid'], e)
+                yield object_to_entity(sub_object, link_label=ref['relationship_type'])
             # the reference is an Attribute
             if ref.get('Attribute'):
-                ref['Attribute']['event_id'] = ref['event_id']   # FIXME remove this ugly workaround - object can't be requested directly from MISP, and to find a full object we need the event_id
+                ref['Attribute']['event_id'] = ref['event_id']   # LATER remove this ugly workaround - object can't be requested directly from MISP using the uuid, and to find a full object we need the event_id
                 for item in attribute_to_entity(ref['Attribute'], link_label=ref['relationship_type']):
                     yield item
+
+
+def get_object_in_event(uuid, e):
+    for o in e['Event']['Object']:
+        if o['uuid'] == uuid:
+            return o
 
 
 def get_attribute_in_object(o, attribute_type, drop=False):
@@ -238,7 +292,6 @@ def event_to_entity(e, link_style=LinkStyle.Normal):
 
 
 def galaxycluster_to_entity(c, link_label=None):
-    # print(json.dumps(c, sort_keys=True, indent=4))
     if c['meta'].get('synonyms'):
         synonyms = ', '.join(c['meta']['synonyms'])
     else:
@@ -302,7 +355,6 @@ def galaxy_update_local_copy(force=False):
             with open(fullPathClusters) as fp:
                 galaxy = json.load(fp)
             for cluster in galaxy['values']:
-                # print(cluster['uuid'])
                 if 'uuid' not in cluster:
                     continue
                 # keep track of the cluster, but also enhance it to look like the cluster we receive when accessing the web.

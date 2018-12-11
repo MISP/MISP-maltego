@@ -30,7 +30,7 @@ class EventToAttributes(Transform):
         maltego_misp_event = request.entity
         # print(dir(maltego_misp_event))
         misp = get_misp_connection(config)
-        event_json = misp.get_event(maltego_misp_event.id)  # FIXME get it without attachments
+        event_json = misp.get_event(maltego_misp_event.id)  # FIXME get it without attachments # FIXME use search + includeAttachments:0, eventid: as request body
         # print(json.dumps(event_json, sort_keys=True, indent=4))
         if not event_json.get('Event'):
             return response
@@ -72,7 +72,7 @@ class ObjectToAttributes(Transform):
         event_json = misp.get_event(maltego_object.event_id)
         for o in event_json['Event']['Object']:
             if o['uuid'] == maltego_object.uuid:
-                for entity in object_to_attributes(o):
+                for entity in object_to_attributes(o, event_json):
                     if entity:
                         response += entity
 

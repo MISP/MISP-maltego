@@ -50,8 +50,8 @@ class MISPGalaxy(Entity):
 
     uuid = StringEntityField('uuid', display_name='UUID')
     name = StringEntityField('name', display_name='Name', is_value=True)
-    description = StringEntityField('description', display_name='Description')
-    cluster_type = StringEntityField('galaxy_type', display_name='Type')
-    cluster_value = StringEntityField('value', display_name='Value')
-    synonyms = StringEntityField('synonyms', display_name='Synonyms')
+    description = StringEntityField('description', display_name='Description', matching_rule=MatchingRule.Loose)
+    cluster_type = StringEntityField('galaxy_type', display_name='Type', matching_rule=MatchingRule.Loose)
+    cluster_value = StringEntityField('value', display_name='Value', matching_rule=MatchingRule.Loose)
+    synonyms = StringEntityField('synonyms', display_name='Synonyms', matching_rule=MatchingRule.Loose)
     tag_name = StringEntityField('tag_name', display_name='Tag')
