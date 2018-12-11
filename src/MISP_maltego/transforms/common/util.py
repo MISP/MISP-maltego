@@ -100,6 +100,8 @@ mapping_misp_to_maltego = {
     # 'rekey_value': [Unknown]
 }
 
+tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
+
 misp_connection = None
 
 
@@ -128,23 +130,40 @@ def entity_obj_to_entity(entity_obj, v, t, **kwargs):
     return entity_obj(v, **kwargs)
 
 
-def attribute_to_entity(a, link_label=None):
+def attribute_to_entity(a, link_label=None, event_tags=None):
     # prepare some attributes to a better form
-    a['data'] = None  # empty the file content as we really don't need this here  # FIXME feature request for misp.get_event() to not get attachment content
+    a['data'] = None  # empty the file content as we really don't need this here
     if a['type'] == 'malware-sample':
         a['type'] = 'filename|md5'
     if a['type'] == 'regkey|value':  # LATER regkey|value => needs to be a special non-combined object
         a['type'] = 'regkey'
 
+    combined_tags = event_tags
+    if 'Galaxy' in a:
+        for g in a['Galaxy']:
+            for c in g['GalaxyCluster']:
+                yield galaxycluster_to_entity(c)
+
+    # TODO today the tag is attached to the event, not the attribute, this is something we want to fix soon.
+    if 'Tag' in a:
+            for t in a['Tag']:
+                combined_tags.append(t['name'])
+                # ignore all misp-galaxies
+                if t['name'].startswith('misp-galaxy'):
+                    continue
+                yield Hashtag(t['name'])
+
+    notes = convert_tags_to_note(combined_tags)
+
     # special cases
     if a['type'] in ('url', 'uri'):
-        yield(URL(url=a['value'], link_label=link_label))
+        yield(URL(url=a['value'], link_label=link_label, notes=notes))
         return
 
     # attribute is from an object, and a relation gives better understanding of the type of attribute
     if a.get('object_relation') and mapping_misp_to_maltego.get(a['object_relation']):
         entity_obj = mapping_misp_to_maltego[a['object_relation']][0]
-        yield entity_obj(a['value'], labels=[Label('comment', a.get('comment'))], link_label=link_label)
+        yield entity_obj(a['value'], labels=[Label('comment', a.get('comment'))], link_label=link_label, notes=notes)
 
     # combined attributes
     elif '|' in a['type']:
@@ -155,7 +174,7 @@ def attribute_to_entity(a, link_label=None):
             labels = [Label('comment', a.get('comment'))]
             if entity_obj == File:
                 labels.append(Label('hash', v_2))
-            yield entity_obj_to_entity(entity_obj, v_1, t_1, labels=labels, link_label=link_label)  # TODO change the comment to include the second part of the regkey
+            yield entity_obj_to_entity(entity_obj, v_1, t_1, labels=labels, link_label=link_label, notes=notes)  # LATER change the comment to include the second part of the regkey
         else:
             yield UIMessage("Type {} of combined type {} not supported for attribute: {}".format(t_1, a['type'], a), type=UIMessageType.Inform)
         if t_2 in mapping_misp_to_maltego:
@@ -163,31 +182,20 @@ def attribute_to_entity(a, link_label=None):
             labels = [Label('comment', a.get('comment'))]
             if entity_obj == Hash:
                 labels.append(Label('filename', v_1))
-            yield entity_obj_to_entity(entity_obj, v_2, t_2, labels=labels, link_label=link_label)  # TODO change the comment to include the first part of the regkey
+            yield entity_obj_to_entity(entity_obj, v_2, t_2, labels=labels, link_label=link_label, notes=notes)  # LATER change the comment to include the first part of the regkey
         else:
             yield UIMessage("Type {} of combined type {} not supported for attribute: {}".format(t_2, a['type'], a), type=UIMessageType.Inform)
 
     # normal attributes
     elif a['type'] in mapping_misp_to_maltego:
         entity_obj = mapping_misp_to_maltego[a['type']][0]
-        yield entity_obj_to_entity(entity_obj, a['value'], a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label)
+        yield entity_obj_to_entity(entity_obj, a['value'], a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label, notes=notes)
 
     # not supported in our maltego mapping
     else:
-        yield Unknown(a['value'], type=a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label)
+        yield Unknown(a['value'], type=a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label, notes=notes)
         yield UIMessage("Type {} not fully supported for attribute: {}".format(a['type'], a), type=UIMessageType.Inform)
 
-    if 'Galaxy' in a:
-        for g in a['Galaxy']:
-            for c in g['GalaxyCluster']:
-                yield galaxycluster_to_entity(c)
-
-    if 'Tag' in a:
-            for t in a['Tag']:
-                # ignore all misp-galaxies
-                if t['name'].startswith('misp-galaxy'):
-                    continue
-                yield Hashtag(t['name'])
     # LATER : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
 
@@ -287,8 +295,24 @@ def get_attribute_in_object(o, attribute_type, drop=False):
     return found_attribute
 
 
+def convert_tags_to_note(tags):
+    if not tags:
+        return None
+    notes = []
+    for tag in tags:
+        for tag_note_prefix in tag_note_prefixes:
+            if tag.startswith(tag_note_prefix):
+                notes.append(tag)
+    return '\n'.join(notes)
+
+
 def event_to_entity(e, link_style=LinkStyle.Normal):
-    return MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_style=link_style)
+    tags = []
+    if 'Tag' in e['Event']:
+        for t in e['Event']['Tag']:
+            tags.append(t['name'])
+    notes = convert_tags_to_note(tags)
+    return MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_style=link_style, notes=notes)
 
 
 def galaxycluster_to_entity(c, link_label=None):

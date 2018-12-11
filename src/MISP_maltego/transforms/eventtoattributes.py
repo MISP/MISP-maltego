@@ -28,30 +28,34 @@ class EventToAttributes(Transform):
 
     def do_transform(self, request, response, config):
         maltego_misp_event = request.entity
-        # print(dir(maltego_misp_event))
         misp = get_misp_connection(config)
         event_json = misp.get_event(maltego_misp_event.id)  # FIXME get it without attachments # FIXME use search + includeAttachments:0, eventid: as request body
-        # print(json.dumps(event_json, sort_keys=True, indent=4))
         if not event_json.get('Event'):
             return response
-        for e in event_json['Event']['RelatedEvent']:
-            response += event_to_entity(e, link_style=LinkStyle.DashDot)
-        for a in event_json['Event']["Attribute"]:
-            for entity in attribute_to_entity(a):
-                if entity:
-                    response += entity
-        for o in event_json['Event']['Object']:
-            # LATER unfortunately we cannot automatically expand the objects
-            response += object_to_entity(o)
-        for g in event_json['Event']['Galaxy']:
-            for c in g['GalaxyCluster']:
-                response += galaxycluster_to_entity(c)
+
+        event_tags = []
         if 'Tag' in event_json['Event']:
             for t in event_json['Event']['Tag']:
+                event_tags.append(t['name'])
                 # ignore all misp-galaxies
                 if t['name'].startswith('misp-galaxy'):
                     continue
                 response += Hashtag(t['name'])
+        for g in event_json['Event']['Galaxy']:
+            for c in g['GalaxyCluster']:
+                response += galaxycluster_to_entity(c)
+
+        for e in event_json['Event']['RelatedEvent']:
+            response += event_to_entity(e, link_style=LinkStyle.DashDot)
+
+        for a in event_json['Event']["Attribute"]:
+            for entity in attribute_to_entity(a, event_tags=event_tags):
+                if entity:
+                    response += entity
+
+        for o in event_json['Event']['Object']:
+            # LATER unfortunately we cannot automatically expand the objects
+            response += object_to_entity(o)
         return response
 
     def on_terminate(self):

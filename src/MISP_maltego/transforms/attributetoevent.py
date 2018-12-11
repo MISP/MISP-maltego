@@ -2,7 +2,7 @@ from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS,
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent
-from MISP_maltego.transforms.common.util import get_misp_connection
+from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity
 
 __author__ = 'Christophe Vandeplas'
 __copyright__ = 'Copyright 2018, MISP_maltego Project'
@@ -26,7 +26,7 @@ class AttributeToEvent(Transform):
         # misp.
         events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
         for e in events_json['response']:
-            response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'])
+            response += event_to_entity(e)
         return response
 
     def on_terminate(self):
