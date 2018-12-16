@@ -316,6 +316,12 @@ def event_to_entity(e, link_style=LinkStyle.Normal):
 
 
 def galaxycluster_to_entity(c, link_label=None):
+    if 'meta' in c and 'uuid' in c['meta']:
+        c['uuid'] = c['meta']['uuid'].pop(0)
+    galaxy_cluster = get_galaxy_cluster(c['uuid'])
+    icon_url = None
+    if 'icon' in galaxy_cluster:  # LATER further investigate if using icons locally is a good idea.
+        icon_url = 'file://{}/{}.png'.format(os.path.join(os.getcwd(), 'MISP_maltego', 'resources', 'images', 'fontawesome'), galaxy_cluster['icon'])
     if c['meta'].get('synonyms'):
         synonyms = ', '.join(c['meta']['synonyms'])
     else:
@@ -328,7 +334,8 @@ def galaxycluster_to_entity(c, link_label=None):
         cluster_value=c['value'],
         synonyms=synonyms,
         tag_name=c['tag_name'],
-        link_label=link_label
+        link_label=link_label,
+        icon_url=icon_url
     )
 
 
@@ -378,6 +385,8 @@ def galaxy_update_local_copy(force=False):
             fullPathClusters = os.path.join(local_path_clusters, galaxy_fname)
             with open(fullPathClusters) as fp:
                 galaxy = json.load(fp)
+            with open(fullPathClusters.replace('clusters', 'galaxies')) as fg:
+                galaxy_main = json.load(fg)
             for cluster in galaxy['values']:
                 if 'uuid' not in cluster:
                     continue
@@ -385,6 +394,8 @@ def galaxy_update_local_copy(force=False):
                 cluster_uuids[cluster['uuid']] = cluster
                 cluster_uuids[cluster['uuid']]['type'] = galaxy['type']
                 cluster_uuids[cluster['uuid']]['tag_name'] = 'misp-galaxy:{}="{}"'.format(galaxy['type'], cluster['value'])
+                if 'icon' in galaxy_main:
+                    cluster_uuids[cluster['uuid']]['icon'] = galaxy_main['icon']
 
         with open(local_path_uuid_mapping, 'w') as f:
             json.dump(cluster_uuids, f, sort_keys=True, indent=4)

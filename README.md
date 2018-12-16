@@ -33,6 +33,9 @@ misp_debug = False
 ## Screenshot
 ![Screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/screenshot.png)
 
+![ATT&CK](https://github.com/MISP/MISP-maltego/blob/master/doc/attack.jpg)
+
+
 ## License
 This software is licensed under [GNU Affero General Public License version 3](http://www.gnu.org/licenses/agpl-3.0.html)
 
@@ -40,3 +43,4 @@ This software is licensed under [GNU Affero General Public License version 3](ht
 
 Note: Before being rewritten from scratch this project was maintained by Emmanuel Bouillon. The code is available in the `v1` branch.
 
+The icons in the fontawesome folder are from https://fontawesome.com/ which are licensed SIL OFL 1.1
