@@ -14,22 +14,9 @@ Dependencies:
 * [Canari3](https://github.com/redcanari/canari3)
 
 ## Installation:
-```
-git clone https://github.com/MISP/MISP-maltego.git
-cd MISP-maltego
-cp  src/MISP_maltego/resources/etc/MISP_maltego.conf MISP_maltego.conf
-python3 setup.py install --user && canari create-profile MISP_maltego
-```
-Import the profile/transforms `MISP_maltego.mtz` in Maltego.  (Import|Export > Import Config)
+Installation is fairly easy, just read the steps in the [documentation](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md).
 
-Edit `$HOME/.canari/MISP_maltego.conf` and enter your `misp_url` and `misp_key`
-```
-[MISP_maltego.local]
-misp_url = https://a.b.c.d
-misp_key = verysecretkey
-misp_verify = True
-misp_debug = False
-``` 
+
 ## Screenshot
 ![Screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/screenshot.png)
 
