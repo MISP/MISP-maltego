@@ -13,8 +13,10 @@ Dependencies:
 * [PyMISP](https://github.com/MISP/PyMISP)
 * [Canari3](https://github.com/redcanari/canari3)
 
-## Installation:
+## Installation and User Guide:
 Installation is fairly easy, just read the steps in the [documentation](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md).
+
+The [User Guide](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md#use-cases) gives some example use-cases.
 
 
 ## Screenshot

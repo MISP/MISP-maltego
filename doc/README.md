@@ -31,9 +31,28 @@ MISP-Maltego tries to use as much as possible the default Paterva entities, or t
 
 # Use Cases
 ## Transform on existing data
-TODO
+In this use case we will be using already existing entities and will initiate a transform using MISP. The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`, `File`, `Hash`, `IPv4Address`, `NSRecord`, `Person`, `PhoneNumber`, `URL`, `Website`.
+
+Example:
+* create an entity `domain` with the value `1dnscontrol.com`.
+* right click and choose *Local Transforms*  > *MISP_maltego* > *Domain To Event*  
+![animated screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/img/usecase1-transform.gif)
+* continue loading transforms on the *MISP Event*
+
 ## Transform from MISP Event ID
-TODO
+While MISP already has a graphing capability we would like to use the power of Maltego to look at the data and expand the work.
+* create a *MISP Event* and give it an `event id`, or `UUID`
+* One **manual** way is to right click and choose *Local Transforms* > *MISP_maltego* > *Event To Attributes* 
+  * Notice the event is transformed to *Attributes*, *Objects*, *Tags*, *Galaxies* and related *MISP Events*
+  * You can now further transform on an *Object* > *Object To Attributes* and see the content of the object
+![machine transforms](https://github.com/MISP/MISP-maltego/blob/master/doc/img/usecase2-manual.gif)
+* Alternatively you can also use the **Maltego Machine** to speed up things. 
+   * Click on the *MISP Event* and in the left menu choose *Event to All* in the *Machines* section. 
+![machine transforms](https://github.com/MISP/MISP-maltego/blob/master/doc/img/usecase2-machine-menu.png)
+   * Notice that the whole event, objects and such will get expanded with data from your MISP instance.
+![animated screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/img/usecase2-machine.gif)
+* You can now further transform on any data.
+  
 ## Transform from Galaxy
 TODO
 ## Visualise MITRE ATT&CK
