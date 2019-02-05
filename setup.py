@@ -28,6 +28,7 @@ setup(
     package_data={
         '': ['*.gif', '*.png', '*.conf', '*.mtz', '*.machine']  # list of resources
     },
+    python_requires='>=3.5',
     install_requires=[
         'canari>=3.3.9,<4',
         'PyMISP'
