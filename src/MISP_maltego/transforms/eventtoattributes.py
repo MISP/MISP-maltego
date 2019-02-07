@@ -2,7 +2,7 @@ from canari.maltego.entities import Hashtag
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
-from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes
+from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
 
 import json
@@ -33,12 +33,16 @@ class EventToAttributes(Transform):
         if not event_json.get('Event'):
             return response
 
+        response += event_to_entity(event_json)
         event_tags = []
         if 'Tag' in event_json['Event']:
             for t in event_json['Event']['Tag']:
                 event_tags.append(t['name'])
                 # ignore all misp-galaxies
                 if t['name'].startswith('misp-galaxy'):
+                    continue
+                # ignore all those we add as notes
+                if tag_matches_note_prefix(t['name']):
                     continue
                 response += Hashtag(t['name'])
         for g in event_json['Event']['Galaxy']:

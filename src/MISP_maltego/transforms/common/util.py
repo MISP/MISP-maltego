@@ -154,6 +154,9 @@ def attribute_to_entity(a, link_label=None, event_tags=None):
                 # ignore all misp-galaxies
                 if t['name'].startswith('misp-galaxy'):
                     continue
+                # ignore all those we add as notes
+                if tag_matches_note_prefix(t['name']):
+                    continue
                 yield Hashtag(t['name'])
 
     notes = convert_tags_to_note(combined_tags)
@@ -307,6 +310,13 @@ def convert_tags_to_note(tags):
             if tag.startswith(tag_note_prefix):
                 notes.append(tag)
     return '\n'.join(notes)
+
+
+def tag_matches_note_prefix(tag):
+    for tag_note_prefix in tag_note_prefixes:
+        if tag.startswith(tag_note_prefix):
+            return True
+    return False
 
 
 def event_to_entity(e, link_style=LinkStyle.Normal):
