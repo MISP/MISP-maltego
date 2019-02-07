@@ -1,6 +1,6 @@
 from canari.maltego.entities import Unknown, Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
-from canari.maltego.message import UIMessageType, UIMessage, Label, LinkStyle
+from canari.maltego.message import UIMessageType, UIMessage, Label, LinkStyle, MaltegoException
 from pymisp import PyMISP
 import json
 import os
@@ -110,7 +110,7 @@ def get_misp_connection(config=None):
     if misp_connection:
         return misp_connection
     if not config:
-        raise Exception("ERROR: MISP connection not yet established, and config not provided as parameter.")
+        raise MaltegoException("ERROR: MISP connection not yet established, and config not provided as parameter.")
     if config['MISP_maltego.local.misp_verify'] in ['True', 'true', 1, 'yes', 'Yes']:
         misp_verify = True
     else:
@@ -119,7 +119,10 @@ def get_misp_connection(config=None):
         misp_debug = True
     else:
         misp_debug = False
-    misp_connection = PyMISP(config['MISP_maltego.local.misp_url'], config['MISP_maltego.local.misp_key'], misp_verify, 'json', misp_debug)
+    try:
+        misp_connection = PyMISP(config['MISP_maltego.local.misp_url'], config['MISP_maltego.local.misp_key'], misp_verify, 'json', misp_debug)
+    except Exception:
+        raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings")
     return misp_connection
 
 
