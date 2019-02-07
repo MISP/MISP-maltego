@@ -1,7 +1,7 @@
 from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Hashtag, Company, Alias, Twitter
 from canari.maltego.transform import Transform
+from canari.maltego.message import Bookmark
 # from canari.framework import EnableDebugWindow
-from MISP_maltego.transforms.common.entities import MISPEvent
 from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity
 
 __author__ = 'Christophe Vandeplas'
@@ -23,10 +23,14 @@ class AttributeToEvent(Transform):
     def do_transform(self, request, response, config):
         maltego_misp_attribute = request.entity
         misp = get_misp_connection(config)
-        # misp.
         events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
+        in_misp = False
         for e in events_json['response']:
+            in_misp = True
             response += event_to_entity(e)
+        if in_misp:
+            request.entity.bookmark = Bookmark.Green
+            response += request.entity
         return response
 
     def on_terminate(self):
@@ -44,22 +48,22 @@ class DomainToEvent(AttributeToEvent):
 
 
 class IPv4AddressToEvent(AttributeToEvent):
-    display_name = 'IPv4AddressToEvent'
+    display_name = 'IPv4Address To Event'
     input_type = IPv4Address
 
 
 class URLToEvent(AttributeToEvent):
-    display_name = 'URLToEvent'
+    display_name = 'URL To Event'
     input_type = URL
 
 
 class DNSNameToEvent(AttributeToEvent):
-    display_name = 'DNSNameToEvent'
+    display_name = 'DNSName To Event'
     input_type = DNSName
 
 
 class ASToEvent(AttributeToEvent):
-    display_name = 'ASToEvent'
+    display_name = 'AS To Event'
     input_type = AS
 
 
@@ -68,7 +72,7 @@ class WebsiteToEvent(AttributeToEvent):
 
 
 class NSRecordToEvent(AttributeToEvent):
-    display_name = 'NSRecordToEvent'
+    display_name = 'NSRecord To Event'
     input_type = NSRecord
 
 
