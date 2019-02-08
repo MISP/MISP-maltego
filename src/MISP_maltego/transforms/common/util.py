@@ -1,5 +1,5 @@
-from canari.maltego.entities import Unknown, Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
-from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
+from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
+from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy, Unknown
 from canari.maltego.message import UIMessageType, UIMessage, Label, LinkStyle, MaltegoException, Bookmark
 from pymisp import PyMISP
 import json
@@ -128,12 +128,12 @@ def get_misp_connection(config=None):
 
 def entity_obj_to_entity(entity_obj, v, t, **kwargs):
     if entity_obj == Hash:
-        return entity_obj(v, _type=t, bookmark=Bookmark.Green, **kwargs)  # LATER type is conflicting with type of Entity, Report this as bug see line 326 /usr/local/lib/python3.5/dist-packages/canari/maltego/entities.py
+        return entity_obj(v, _type=t, **kwargs)  # LATER type is conflicting with type of Entity, Report this as bug see line 326 /usr/local/lib/python3.5/dist-packages/canari/maltego/entities.py
 
-    return entity_obj(v, bookmark=Bookmark.Green, **kwargs)
+    return entity_obj(v, **kwargs)
 
 
-def attribute_to_entity(a, link_label=None, event_tags=None):
+def attribute_to_entity(a, link_label=None, event_tags=None, only_self=False):
     # prepare some attributes to a better form
     a['data'] = None  # empty the file content as we really don't need this here
     if a['type'] == 'malware-sample':
@@ -142,13 +142,13 @@ def attribute_to_entity(a, link_label=None, event_tags=None):
         a['type'] = 'regkey'
 
     combined_tags = event_tags
-    if 'Galaxy' in a:
+    if 'Galaxy' in a and not only_self:
         for g in a['Galaxy']:
             for c in g['GalaxyCluster']:
                 yield galaxycluster_to_entity(c)
 
     # TODO today the tag is attached to the event, not the attribute, this is something we want to fix soon.
-    if 'Tag' in a:
+    if 'Tag' in a and not only_self:
             for t in a['Tag']:
                 combined_tags.append(t['name'])
                 # ignore all misp-galaxies
@@ -300,6 +300,17 @@ def get_attribute_in_object(o, attribute_type, drop=False):
                 o['Attribute'].pop(i)
             break
     return found_attribute
+
+
+def get_attribute_in_event(e, attribute_value):
+    for a in e['Event']["Attribute"]:
+        if a['value'] == attribute_value:
+            return a
+    for o in e['Event']['Object']:
+        for a in o['Attribute']:
+            if a['value'] == attribute_value:
+                return a
+    return None
 
 
 def convert_tags_to_note(tags):
