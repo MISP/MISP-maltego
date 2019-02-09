@@ -1,6 +1,4 @@
-from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Hashtag, Company, Alias, Twitter
 from canari.maltego.transform import Transform
-from canari.maltego.message import Bookmark
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, get_attribute_in_event, attribute_to_entity
 from MISP_maltego.transforms.common.entities import Unknown
@@ -24,6 +22,13 @@ class AttributeInMISP(Transform):
 
     def do_transform(self, request, response, config):
         maltego_misp_attribute = request.entity
+        # skip MISP Events (value = int)
+        try:
+            int(maltego_misp_attribute.value)
+            return response
+        except Exception:
+            pass
+
         misp = get_misp_connection(config)
         events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
         in_misp = False
@@ -48,6 +53,13 @@ class AttributeToEvent(Transform):
 
     def do_transform(self, request, response, config):
         maltego_misp_attribute = request.entity
+        # skip MISP Events (value = int)
+        try:
+            int(maltego_misp_attribute.value)
+            return response
+        except Exception:
+            pass
+
         misp = get_misp_connection(config)
         events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
         in_misp = False

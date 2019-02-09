@@ -24,7 +24,7 @@ class EventToAttributes(Transform):
 
     # The transform input entity type.
     input_type = MISPEvent
-    description = 'Expands an Event to Attributes, Tags, Galaxies and related events'
+    description = 'Expands an Event to Attributes, Tags, Galaxies'
 
     def do_transform(self, request, response, config):
         maltego_misp_event = request.entity
@@ -49,8 +49,8 @@ class EventToAttributes(Transform):
             for c in g['GalaxyCluster']:
                 response += galaxycluster_to_entity(c)
 
-        for e in event_json['Event']['RelatedEvent']:
-            response += event_to_entity(e, link_style=LinkStyle.DashDot)
+        # for e in event_json['Event']['RelatedEvent']:
+        #     response += event_to_entity(e, link_style=LinkStyle.DashDot)
 
         for a in event_json['Event']["Attribute"]:
             for entity in attribute_to_entity(a, event_tags=event_tags):
