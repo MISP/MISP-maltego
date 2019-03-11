@@ -2,7 +2,7 @@ from canari.maltego.entities import Hashtag
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
-from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes
+from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
 
 import json
@@ -52,7 +52,7 @@ class EventToAttributes(Transform):
 
     # The transform input entity type.
     input_type = MISPEvent
-    description = 'Expands an Event to Attributes, Tags, Galaxies and related events'
+    description = 'Expands an Event to Attributes, Tags, Galaxies'
 
     def do_transform(self, request, response, config):
         maltego_misp_event = request.entity
@@ -61,6 +61,7 @@ class EventToAttributes(Transform):
         if not event_json.get('Event'):
             return response
 
+        response += event_to_entity(event_json)
         event_tags = []
         if 'Tag' in event_json['Event']:
             for t in event_json['Event']['Tag']:
@@ -68,13 +69,16 @@ class EventToAttributes(Transform):
                 # ignore all misp-galaxies
                 if t['name'].startswith('misp-galaxy'):
                     continue
+                # ignore all those we add as notes
+                if tag_matches_note_prefix(t['name']):
+                    continue
                 response += Hashtag(t['name'])
         for g in event_json['Event']['Galaxy']:
             for c in g['GalaxyCluster']:
                 response += galaxycluster_to_entity(c)
 
-        for e in event_json['Event']['RelatedEvent']:
-            response += event_to_entity(e, link_style=LinkStyle.DashDot)
+        # for e in event_json['Event']['RelatedEvent']:
+        #     response += event_to_entity(e, link_style=LinkStyle.DashDot)
 
         for a in event_json['Event']["Attribute"]:
             for entity in attribute_to_entity(a, event_tags=event_tags):

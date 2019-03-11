@@ -9,10 +9,6 @@ Alternatively initiate a transform on an existing Maltego entity.
 The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`, `File`, `Hash`, `IPv4Address`, `NSRecord`, `Person`, `PhoneNumber`, `URL`, `Website`
 
 
-Dependencies:
-* [PyMISP](https://github.com/MISP/PyMISP)
-* [Canari3](https://github.com/redcanari/canari3)
-
 ## Installation and User Guide:
 Installation is fairly easy, just read the steps in the [documentation](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md).
 

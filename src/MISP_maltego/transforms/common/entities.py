@@ -13,8 +13,14 @@ __status__ = 'Development'
 __all__ = [
     'MISPEvent',
     'MISPObject',
-    'MISPGalaxy'
+    'MISPGalaxy',
+    'Unknown'
 ]
+
+
+class Unknown(Entity):
+    _category_ = 'Unknown'
+    _namespace_ = 'maltego'
 
 
 class MISPEvent(Entity):
