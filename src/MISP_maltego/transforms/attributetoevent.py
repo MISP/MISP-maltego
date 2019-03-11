@@ -25,6 +25,7 @@ class AttributeToEvent(Transform):
         misp = get_misp_connection(config)
         # misp.
         events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
+
         for e in events_json['response']:
             response += event_to_entity(e)
         return response
