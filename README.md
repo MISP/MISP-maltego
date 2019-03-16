@@ -1,5 +1,5 @@
 # Quick start guide
-This is a Maltego MISP integration tool allowing you to view (read-only) data from a MISP instance. 
+This is a [Maltego](https://www.paterva.com/web7/) [MISP](https://www.misp-project.org) integration tool allowing you to view (read-only) data from a MISP instance. 
 
 It also allows browsing through the [MITRE ATT&CK](https://attack.mitre.org/) entities.
 
