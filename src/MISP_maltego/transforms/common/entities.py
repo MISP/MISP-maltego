@@ -13,14 +13,8 @@ __status__ = 'Development'
 __all__ = [
     'MISPEvent',
     'MISPObject',
-    'MISPGalaxy',
-    'Unknown'
+    'MISPGalaxy'
 ]
-
-
-class Unknown(Entity):
-    _category_ = 'Unknown'
-    _namespace_ = 'maltego'
 
 
 class MISPEvent(Entity):
@@ -54,8 +48,8 @@ class MISPGalaxy(Entity):
     _category_ = 'MISP'
     _namespace_ = 'misp'
 
-    uuid = StringEntityField('uuid', display_name='UUID')
-    name = StringEntityField('name', display_name='Name', is_value=True)
+    uuid = StringEntityField('uuid', display_name='UUID', matching_rule=MatchingRule.Loose)
+    name = StringEntityField('name', display_name='Name', is_value=True, matching_rule=MatchingRule.Loose)
     description = StringEntityField('description', display_name='Description', matching_rule=MatchingRule.Loose)
     cluster_type = StringEntityField('galaxy_type', display_name='Type', matching_rule=MatchingRule.Loose)
     cluster_value = StringEntityField('value', display_name='Value', matching_rule=MatchingRule.Loose)

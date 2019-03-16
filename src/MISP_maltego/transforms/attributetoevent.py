@@ -1,7 +1,7 @@
+from canari.maltego.entities import Netblock, Unknown
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, get_attribute_in_event, attribute_to_entity
-from MISP_maltego.transforms.common.entities import Unknown
 
 __author__ = 'Christophe Vandeplas'
 __copyright__ = 'Copyright 2018, MISP_maltego Project'
@@ -46,6 +46,28 @@ class AttributeInMISP(Transform):
         return response
 
 
+# placeholder for https://github.com/MISP/MISP-maltego/issues/11
+# waiting for support of CIDR search through the REST API
+# @EnableDebugWindow
+# class NetblockToAttributes(Transform):
+#     display_name = 'to MISP Attributes'
+#     input_type = Netblock
+
+#     def do_transform(self, request, response, config):
+#         maltego_misp_attribute = request.entity
+#         misp = get_misp_connection(config)
+#         import ipaddress
+#         ip_start, ip_end = maltego_misp_attribute.value.split('-')
+#         # FIXME make this work with IPv4 and IPv6
+#         # automagically detect the different CIDRs
+#         cidrs = ipaddress.summarize_address_range(ipaddress.IPv4Address(ip_start), ipaddress.IPv4Address(ip_end))
+#         for cidr in cidrs:
+#             print(str(cidr))
+#             attr_json = misp.search(controller='attributes', values=str(cidr), withAttachments=False)
+#             print(attr_json)
+#         return response
+
+
 # @EnableDebugWindow
 class AttributeToEvent(Transform):
     display_name = 'to MISP Event'
@@ -58,6 +80,10 @@ class AttributeToEvent(Transform):
             int(maltego_misp_attribute.value)
             return response
         except Exception:
+            pass
+        # test for Netblock
+        if 'ipv4-range' in request.entity.fields:
+            # placeholder for https://github.com/MISP/MISP-maltego/issues/11
             pass
 
         misp = get_misp_connection(config)

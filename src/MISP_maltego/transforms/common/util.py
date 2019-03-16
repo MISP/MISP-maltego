@@ -1,5 +1,5 @@
-from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
-from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy, Unknown
+from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter, Unknown
+from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
 from canari.maltego.message import UIMessageType, UIMessage, Label, LinkStyle, MaltegoException, Bookmark
 from pymisp import PyMISP
 import json
@@ -354,14 +354,13 @@ def galaxycluster_to_entity(c, link_label=None):
     return MISPGalaxy(
         '{}\n{}'.format(c['type'], c['value']),
         uuid=c['uuid'],
-        description=c['description'],
-        cluster_type=c['type'],
-        cluster_value=c['value'],
+        description=c.get('description'),
+        cluster_type=c.get('type'),
+        cluster_value=c.get('value'),
         synonyms=synonyms,
         tag_name=c['tag_name'],
         link_label=link_label,
-        icon_url=icon_url,
-        bookmark=Bookmark.Green
+        icon_url=icon_url
     )
 
 

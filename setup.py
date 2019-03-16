@@ -30,7 +30,7 @@ setup(
     },
     python_requires='>=3.5',
     install_requires=[
-        'canari>=3.3.9,<4',
+        'canari>=3.3.10,<4',
         'PyMISP'
     ],
     dependency_links=[
