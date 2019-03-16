@@ -100,6 +100,29 @@ mapping_misp_to_maltego = {
     # 'rekey_value': [Unknown]
 }
 
+mapping_galaxy_icon = {
+    # "android": "malware",  # "android",
+    "btc": "ransomware",
+    "bug": "vulnerability",
+    # "cart-arrow-down": "malware",  #"tds",
+    "chain": "course_of_action",
+    "door-open": "backdoor",
+    "eye": "malware",
+    "gavel": "tool",
+    # "globe": "cert-eu-govsector",
+    # "industry": "sector",
+    # "internet-explorer": "exploit-kit",
+    "key": "stealer",
+    "map": "attack_pattern",
+    "optin-monster": "malware",
+    # "shield": "malpedia",
+    # "shield": "preventive-measure",
+    "sitemap": "botnet",
+    "usd": "malware",  # "banker",
+    # "user-secret": "mitre-intrusion-set",
+    "user-secret": "threat_actor",
+}
+
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
 misp_connection = None
@@ -346,7 +369,12 @@ def galaxycluster_to_entity(c, link_label=None):
     galaxy_cluster = get_galaxy_cluster(c['uuid'])
     icon_url = None
     if 'icon' in galaxy_cluster:  # LATER further investigate if using icons locally is a good idea.
-        icon_url = 'file://{}/{}.png'.format(os.path.join(os.getcwd(), 'MISP_maltego', 'resources', 'images', 'fontawesome'), galaxy_cluster['icon'])
+        # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
+        try:
+            icon_url = 'file://{}/{}.png'.format(os.path.join(os.getcwd(), 'MISP_maltego', 'resources', 'images', 'intelligence-icons'), mapping_galaxy_icon[galaxy_cluster['icon']])
+        except Exception:
+            # it's not in our mapping, just ignore and leave the default Galaxy icon
+            pass
     if c['meta'].get('synonyms'):
         synonyms = ', '.join(c['meta']['synonyms'])
     else:
@@ -433,9 +461,26 @@ def galaxy_load_cluster_mapping():
     return cluster_uuids
 
 
-def get_galaxy_cluster(uuid):
+def get_galaxy_cluster(uuid=None, tag=None):
     global galaxy_cluster_uuids
     if not galaxy_cluster_uuids:
         galaxy_cluster_uuids = galaxy_load_cluster_mapping()
 
-    return galaxy_cluster_uuids.get(uuid)
+    if uuid:
+        return galaxy_cluster_uuids.get(uuid)
+    if tag:
+        for item in galaxy_cluster_uuids.values():
+            if item['tag_name'] == tag:
+                return item
+
+
+def get_galaxies_relating(uuid):
+    global galaxy_cluster_uuids
+    if not galaxy_cluster_uuids:
+        galaxy_cluster_uuids = galaxy_load_cluster_mapping()
+
+    for item in galaxy_cluster_uuids.values():
+        if 'related' in item:
+            for related in item['related']:
+                if related['dest-uuid'] == uuid:
+                    yield item

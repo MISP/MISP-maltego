@@ -1,6 +1,8 @@
 # Quick start guide
 This is a Maltego MISP integration tool allowing you to view (read-only) data from a MISP instance. 
 
+It also allows browsing through the [MITRE ATT&CK](https://attack.mitre.org/) entities.
+
 Currently supported MISP elements are : Event, Attribute, Object (incl relations), Tag, Taxonomy, Galaxy (incl relations).
 
 Once installed you can start by creating a `MISPEvent` entity, then load the Machine `EventToAll` or the transform `EventToAttributes`.
@@ -28,4 +30,4 @@ This software is licensed under [GNU Affero General Public License version 3](ht
 
 Note: Before being rewritten from scratch this project was maintained by Emmanuel Bouillon. The code is available in the `v1` branch.
 
-The icons in the fontawesome folder are from https://fontawesome.com/ which are licensed SIL OFL 1.1
+The icons in the intelligence-icons folder are from [intelligence-icons](https://github.com/MISP/intelligence-icons) licensed CC-BY-SA - Françoise Penninckx, Brett Jordan

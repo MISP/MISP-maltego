@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(
     name='MISP_maltego',
     author='Christophe Vandeplas',
-    version='1.0',
+    version='1.1',
     author_email='christophe@vandeplas.com',
     maintainer='Christophe Vandeplas',
     url='https://github.com/MISP/MISP-maltego',

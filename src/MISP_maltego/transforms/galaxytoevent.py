@@ -1,7 +1,7 @@
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy
-from MISP_maltego.transforms.common.util import get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster
+from MISP_maltego.transforms.common.util import get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, mapping_galaxy_icon
 from canari.maltego.message import UIMessageType, UIMessage
 
 
@@ -49,15 +49,51 @@ class GalaxyToRelations(Transform):
     def do_transform(self, request, response, config):
         maltego_misp_galaxy = request.entity
 
-        # # FIXME if not found, send message to user to update, while noting local galaxies are not supported yet
-        current_cluster = get_galaxy_cluster(maltego_misp_galaxy.uuid)
-        if not current_cluster:
-            response += UIMessage("Galaxy Cluster UUID not in local mapping. Please update local cache; or non-public UUID", type=UIMessageType.Inform)
-            return response
+        if maltego_misp_galaxy.uuid:
+            current_cluster = get_galaxy_cluster(uuid=maltego_misp_galaxy.uuid)
+        elif maltego_misp_galaxy.tag_name:
+            current_cluster = get_galaxy_cluster(tag=maltego_misp_galaxy.tag_name)
+        elif maltego_misp_galaxy.name:
+            current_cluster = get_galaxy_cluster(tag=maltego_misp_galaxy.name)
 
+        if not current_cluster:
+            response += UIMessage("Galaxy Cluster UUID not in local mapping. Please update local cache; non-public UUID are not supported yet.", type=UIMessageType.Inform)
+            return response
+        c = current_cluster
+        # update existing object
+        # import json
+        # print(json.dumps(c, sort_keys=True, indent=2))
+        # return response
+        galaxy_cluster = get_galaxy_cluster(c['uuid'])
+        icon_url = None
+        import os
+        if 'icon' in galaxy_cluster:  # LATER further investigate if using icons locally is a good idea.
+            # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
+            try:
+                icon_url = 'file://{}/{}.png'.format(os.path.join(os.getcwd(), 'MISP_maltego', 'resources', 'images', 'intelligence-icons'), mapping_galaxy_icon[galaxy_cluster['icon']])
+            except Exception:
+                # it's not in our mapping, just ignore and leave the default Galaxy icon
+                pass
+        if c['meta'].get('synonyms'):
+            synonyms = ', '.join(c['meta']['synonyms'])
+        else:
+            synonyms = ''
+        request.entity.name = '{}\n{}'.format(c['type'], c['value'])
+        request.entity.uuid = c['uuid']
+        request.entity.description = c.get('description')
+        request.entity.cluster_type = c.get('type')
+        request.entity.cluster_value = c.get('value')
+        request.entity.synonyms = synonyms
+        request.entity.tag_name = c['tag_name']
+        request.entity.icon_url = icon_url
+        # response += request.entity
+        # find related objects
         if 'related' in current_cluster:
             for related in current_cluster['related']:
                 related_cluster = get_galaxy_cluster(related['dest-uuid'])
                 if related_cluster:
                     response += galaxycluster_to_entity(related_cluster, link_label=related['type'])
+        # find objects that are relating to this one
+        # for related in get_galaxies_relating(current_cluster['uuid']):
+        #     response += galaxycluster_to_entity(related, link_label="FIXME opposite of ".format(related['type']))  # FIXME link_label should be opposite
         return response
