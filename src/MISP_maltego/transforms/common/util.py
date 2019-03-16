@@ -443,6 +443,9 @@ def galaxy_update_local_copy(force=False):
             for cluster in galaxy['values']:
                 if 'uuid' not in cluster:
                     continue
+                # skip deprecated galaxies/clusters
+                if galaxy_main['namespace'] == 'deprecated':
+                    continue
                 # keep track of the cluster, but also enhance it to look like the cluster we receive when accessing the web.
                 cluster_uuids[cluster['uuid']] = cluster
                 cluster_uuids[cluster['uuid']]['type'] = galaxy['type']
