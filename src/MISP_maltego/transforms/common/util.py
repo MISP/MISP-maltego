@@ -156,7 +156,7 @@ def entity_obj_to_entity(entity_obj, v, t, **kwargs):
     return entity_obj(v, **kwargs)
 
 
-def attribute_to_entity(a, link_label=None, event_tags=None, only_self=False):
+def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
     # prepare some attributes to a better form
     a['data'] = None  # empty the file content as we really don't need this here
     if a['type'] == 'malware-sample':
