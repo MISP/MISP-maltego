@@ -5,7 +5,6 @@ from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
 from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
 
-import json
 
 __author__ = 'Christophe Vandeplas'
 __copyright__ = 'Copyright 2018, MISP_maltego Project'
@@ -49,23 +48,32 @@ class EventToAttributes(Transform):
             for c in g['GalaxyCluster']:
                 response += galaxycluster_to_entity(c)
 
-        # for e in event_json['Event']['RelatedEvent']:
-        #     response += event_to_entity(e, link_style=LinkStyle.DashDot)
-
         for a in event_json['Event']["Attribute"]:
             for entity in attribute_to_entity(a, event_tags=event_tags):
                 if entity:
                     response += entity
 
         for o in event_json['Event']['Object']:
-            # LATER unfortunately we cannot automatically expand the objects
             response += object_to_entity(o)
         return response
 
-    def on_terminate(self):
-        """This method gets called when transform execution is prematurely terminated. It is only applicable for local
-        transforms. It can be excluded if you don't need it."""
-        pass
+
+# @EnableDebugWindow
+class EventToRelations(Transform):
+    input_type = MISPEvent
+    description = 'Expands an Event to related Events'
+
+    def do_transform(self, request, response, config):
+        maltego_misp_event = request.entity
+        misp = get_misp_connection(config)
+        event_json = misp.get_event(maltego_misp_event.id)  # FIXME get it without attachments # FIXME use search + includeAttachments:0, eventid: as request body
+        if not event_json.get('Event'):
+            return response
+
+        response += event_to_entity(event_json)
+        for e in event_json['Event']['RelatedEvent']:
+            response += event_to_entity(e, link_style=LinkStyle.DashDot)
+        return response
 
 
 # @EnableDebugWindow
