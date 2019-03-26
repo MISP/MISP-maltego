@@ -101,8 +101,3 @@ class AttributeToEvent(Transform):
                     for item in attribute_to_entity(attr, only_self=True):
                         response += item
         return response
-
-    def on_terminate(self):
-        """This method gets called when transform execution is prematurely terminated. It is only applicable for local
-        transforms. It can be excluded if you don't need it."""
-        pass
