@@ -366,6 +366,12 @@ def event_to_entity(e, link_style=LinkStyle.Normal):
 def galaxycluster_to_entity(c, link_label=None):
     if 'meta' in c and 'uuid' in c['meta']:
         c['uuid'] = c['meta']['uuid'].pop(0)
+
+    if 'meta' in c and 'synonyms' in c['meta']:
+        synonyms = ', '.join(c['meta']['synonyms'])
+    else:
+        synonyms = ''
+
     galaxy_cluster = get_galaxy_cluster(c['uuid'])
     icon_url = None
     if 'icon' in galaxy_cluster:  # LATER further investigate if using icons locally is a good idea.
@@ -375,10 +381,7 @@ def galaxycluster_to_entity(c, link_label=None):
         except Exception:
             # it's not in our mapping, just ignore and leave the default Galaxy icon
             pass
-    if c['meta'].get('synonyms'):
-        synonyms = ', '.join(c['meta']['synonyms'])
-    else:
-        synonyms = ''
+
     return MISPGalaxy(
         '{}\n{}'.format(c['type'], c['value']),
         uuid=c['uuid'],
