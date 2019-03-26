@@ -1,7 +1,7 @@
-from canari.maltego.entities import Netblock, Unknown
+from canari.maltego.entities import Unknown
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
-from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, get_attribute_in_event, attribute_to_entity
+from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, get_attribute_in_event, attribute_to_entity, get_entity_property
 
 __author__ = 'Christophe Vandeplas'
 __copyright__ = 'Copyright 2018, MISP_maltego Project'
@@ -74,20 +74,26 @@ class AttributeToEvent(Transform):
     input_type = Unknown
 
     def do_transform(self, request, response, config):
-        maltego_misp_attribute = request.entity
-        # skip MISP Events (value = int)
-        try:
-            int(maltego_misp_attribute.value)
-            return response
-        except Exception:
-            pass
-        # test for Netblock
+        # skip some Entities
+        skip = ['properties.mispevent', 'properties.mispobject']
+        for i in skip:
+            if i in request.entity.fields:
+                return response
+
         if 'ipv4-range' in request.entity.fields:
             # placeholder for https://github.com/MISP/MISP-maltego/issues/11
             pass
 
         misp = get_misp_connection(config)
-        events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
+
+        if 'properties.mispgalaxy' in request.entity.fields:
+            tag_name = get_entity_property(request.entity, 'tag_name')
+            if not tag_name:
+                tag_name = request.entity.value
+            events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
+
+        else:
+            events_json = misp.search(controller='events', values=request.entity.value, withAttachments=False)
         in_misp = False
         for e in events_json['response']:
             in_misp = True
@@ -96,7 +102,7 @@ class AttributeToEvent(Transform):
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
         if in_misp:
             for e in events_json['response']:
-                attr = get_attribute_in_event(e, maltego_misp_attribute.value)
+                attr = get_attribute_in_event(e, request.entity.value)
                 if attr:
                     for item in attribute_to_entity(attr, only_self=True):
                         response += item

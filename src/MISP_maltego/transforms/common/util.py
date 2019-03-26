@@ -156,6 +156,13 @@ def entity_obj_to_entity(entity_obj, v, t, **kwargs):
     return entity_obj(v, **kwargs)
 
 
+def get_entity_property(entity, name):
+    for k, v in entity.fields.items():
+        if k == name:
+            return v.value
+    return None
+
+
 def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
     # prepare some attributes to a better form
     a['data'] = None  # empty the file content as we really don't need this here
