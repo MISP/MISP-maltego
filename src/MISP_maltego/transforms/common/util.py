@@ -431,10 +431,13 @@ def galaxy_update_local_copy(force=False):
 
     if force:
         # download the latest zip of the public galaxy
-        resp = requests.get(galaxy_archive_url)
-        zf = ZipFile(io.BytesIO(resp.content))
-        zf.extractall(local_path_root)
-        zf.close()
+        try:
+            resp = requests.get(galaxy_archive_url)
+            zf = ZipFile(io.BytesIO(resp.content))
+            zf.extractall(local_path_root)
+            zf.close()
+        except Exception:
+            raise(MaltegoException("ERROR: Could not download Galaxy data from htts://github.com/MISP/MISP-galaxy/. Please check internet connectivity."))
 
         # generate the uuid mapping and save it to a file
         galaxies_fnames = []
