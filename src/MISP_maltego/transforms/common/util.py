@@ -290,8 +290,8 @@ def object_to_entity(o, link_label=None):
 def object_to_attributes(o, e):
     # first process attributes from an object that belong together (eg: first-name + last-name), and remove them from the list
     if o['name'] == 'person':
-        first_name = get_attribute_in_object(o, 'first-name', drop=True).get('value')
-        last_name = get_attribute_in_object(o, 'last-name', drop=True).get('value')
+        first_name = get_attribute_in_object(o, attribute_type='first-name', drop=True).get('value')
+        last_name = get_attribute_in_object(o, attribute_type='last-name', drop=True).get('value')
         yield entity_obj_to_entity(Person, ' '.join([first_name, last_name]).strip(), 'person', lastname=last_name, firstnames=first_name, bookmark=Bookmark.Green)
 
     # process normal attributes
@@ -320,7 +320,7 @@ def get_object_in_event(uuid, e):
             return o
 
 
-def get_attribute_in_object(o, attribute_type, drop=False):
+def get_attribute_in_object(o, attribute_type=False, attribute_value=False, drop=False):
     '''Gets the first attribute of a specific type within an object'''
     found_attribute = {'value': ''}
     for i, a in enumerate(o['Attribute']):
@@ -329,6 +329,16 @@ def get_attribute_in_object(o, attribute_type, drop=False):
             if drop:    # drop the attribute from the object
                 o['Attribute'].pop(i)
             break
+        if a['value'] == attribute_value:
+            found_attribute = a.copy()
+            if drop:    # drop the attribute from the object
+                o['Attribute'].pop(i)
+        if '|' in a['type'] or a['type'] == 'malware-sample':
+            if attribute_value in a['value'].split('|'):
+                found_attribute = a.copy()
+                if drop:    # drop the attribute from the object
+                    o['Attribute'].pop(i)
+
     return found_attribute
 
 
@@ -336,10 +346,10 @@ def get_attribute_in_event(e, attribute_value):
     for a in e['Event']["Attribute"]:
         if a['value'] == attribute_value:
             return a
-    for o in e['Event']['Object']:
-        for a in o['Attribute']:
-            if a['value'] == attribute_value:
+        if '|' in a['type'] or a['type'] == 'malware-sample':
+            if attribute_value in a['value'].split('|'):
                 return a
+
     return None
 
 

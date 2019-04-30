@@ -1,7 +1,7 @@
 from canari.maltego.entities import Unknown
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
-from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, get_attribute_in_event, attribute_to_entity, get_entity_property
+from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, object_to_entity, get_attribute_in_event, get_attribute_in_object, attribute_to_entity, get_entity_property
 
 __author__ = 'Christophe Vandeplas'
 __copyright__ = 'Copyright 2018, MISP_maltego Project'
@@ -85,25 +85,28 @@ class AttributeToEvent(Transform):
             pass
 
         misp = get_misp_connection(config)
-
+        # special Entities
         if 'properties.mispgalaxy' in request.entity.fields:
             tag_name = get_entity_property(request.entity, 'tag_name')
             if not tag_name:
                 tag_name = request.entity.value
             events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
-
+        # FIXME make it work with object to event
+        # standard Entities
         else:
             events_json = misp.search(controller='events', values=request.entity.value, withAttachments=False)
-        in_misp = False
+
+        # return the MISPEvent or MISPObject of the attribute
+
         for e in events_json['response']:
-            in_misp = True
-            response += event_to_entity(e)
-        # find the object again, and bookmark it green
-        # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
-        if in_misp:
-            for e in events_json['response']:
-                attr = get_attribute_in_event(e, request.entity.value)
-                if attr:
-                    for item in attribute_to_entity(attr, only_self=True):
-                        response += item
+            # find the value as attribute
+            attr = get_attribute_in_event(e, request.entity.value)
+            if attr:
+                response += event_to_entity(e)
+            # find the value as object
+            if 'Object' in e['Event']:
+                for o in e['Event']['Object']:
+                    if get_attribute_in_object(o, attribute_value=request.entity.value).get('value'):
+                        response += object_to_entity(o)
+
         return response
