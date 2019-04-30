@@ -16,6 +16,7 @@ __maintainer__ = 'Christophe Vandeplas'
 __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
 
+
 # @EnableDebugWindow
 class EventToTags(Transform):
     """"Expands an object to its attributes"""
@@ -34,17 +35,16 @@ class EventToTags(Transform):
                 # ignore all misp-galaxies
                 if t['name'].startswith('misp-galaxy'):
                     continue
+                # ignore all those we add as notes
+                if tag_matches_note_prefix(t['name']):
+                    continue
                 response += Hashtag(t['name'])
-
         for g in event_json['Event']['Galaxy']:
             for c in g['GalaxyCluster']:
                 response += galaxycluster_to_entity(c)
         return response
 
-    def on_terminate(self):
-        """This method gets called when transform execution is prematurely terminated. It is only applicable for local
-        transforms. It can be excluded if you don't need it."""
-        pass
+
 # @EnableDebugWindow
 class EventToAttributes(Transform):
     """Expands an event to attributes, objects, tags and galaxies."""
