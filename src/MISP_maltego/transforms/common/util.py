@@ -391,10 +391,9 @@ def galaxycluster_to_entity(c, link_label=None):
 
     galaxy_cluster = get_galaxy_cluster(c['uuid'])
     icon_url = None
-    if 'icon' in galaxy_cluster:  # LATER further investigate if using icons locally is a good idea.
-        # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
+    if 'icon' in galaxy_cluster:  # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
         try:
-            icon_url = 'file://{}/{}.png'.format(os.path.join(os.getcwd(), 'MISP_maltego', 'resources', 'images', 'intelligence-icons'), mapping_galaxy_icon[galaxy_cluster['icon']])
+            icon_url = mapping_galaxy_icon[galaxy_cluster['icon']]
         except Exception:
             # it's not in our mapping, just ignore and leave the default Galaxy icon
             pass

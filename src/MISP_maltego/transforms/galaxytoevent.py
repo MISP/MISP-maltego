@@ -61,16 +61,12 @@ class GalaxyToRelations(Transform):
             return response
         c = current_cluster
         # update existing object
-        # import json
-        # print(json.dumps(c, sort_keys=True, indent=2))
-        # return response
+
         galaxy_cluster = get_galaxy_cluster(c['uuid'])
         icon_url = None
-        import os
-        if 'icon' in galaxy_cluster:  # LATER further investigate if using icons locally is a good idea.
-            # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
+        if 'icon' in galaxy_cluster:  # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
             try:
-                icon_url = 'file://{}/{}.png'.format(os.path.join(os.getcwd(), 'MISP_maltego', 'resources', 'images', 'intelligence-icons'), mapping_galaxy_icon[galaxy_cluster['icon']])
+                icon_url = mapping_galaxy_icon[galaxy_cluster['icon']]
             except Exception:
                 # it's not in our mapping, just ignore and leave the default Galaxy icon
                 pass
@@ -95,5 +91,5 @@ class GalaxyToRelations(Transform):
                     response += galaxycluster_to_entity(related_cluster, link_label=related['type'])
         # find objects that are relating to this one
         # for related in get_galaxies_relating(current_cluster['uuid']):
-        #     response += galaxycluster_to_entity(related, link_label="FIXME opposite of ".format(related['type']))  # FIXME link_label should be opposite
+        #     response += galaxycluster_to_entity(related, link_label="TODO opposite of ".format(related['type']))  # TODO link_label should be opposite
         return response
