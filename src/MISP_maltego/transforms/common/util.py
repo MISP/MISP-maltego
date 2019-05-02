@@ -1,6 +1,6 @@
 from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
-from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark
+from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection
 from pymisp import PyMISP
 import json
 import os
@@ -381,7 +381,7 @@ def event_to_entity(e, link_style=LinkStyle.Normal):
     return MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_style=link_style, notes=notes, bookmark=Bookmark.Green)
 
 
-def galaxycluster_to_entity(c, link_label=None):
+def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.InputToOutput):
     if 'meta' in c and 'uuid' in c['meta']:
         c['uuid'] = c['meta']['uuid'].pop(0)
 
@@ -408,11 +408,12 @@ def galaxycluster_to_entity(c, link_label=None):
         synonyms=synonyms,
         tag_name=c['tag_name'],
         link_label=link_label,
-        icon_url=icon_url
+        icon_url=icon_url,
+        link_direction=link_direction
     )
 
 
-# FIXME this uses the galaxies from github as the MISP web UI does not fully support the Galaxies in the webui.
+# LATER this uses the galaxies from github as the MISP web UI does not fully support the Galaxies in the webui.
 # See https://github.com/MISP/MISP/issues/3801
 galaxy_archive_url = 'https://github.com/MISP/misp-galaxy/archive/master.zip'
 local_path_root = os.path.join(tempfile.gettempdir(), 'MISP-maltego')

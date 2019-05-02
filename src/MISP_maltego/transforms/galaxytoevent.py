@@ -2,7 +2,7 @@ from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy
 from MISP_maltego.transforms.common.util import get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
-from canari.maltego.message import UIMessageType, UIMessage
+from canari.maltego.message import UIMessageType, UIMessage, LinkDirection
 
 
 __author__ = 'Christophe Vandeplas'
@@ -102,6 +102,11 @@ class GalaxyToRelations(Transform):
                 if related_cluster:
                     response += galaxycluster_to_entity(related_cluster, link_label=related['type'])
         # find objects that are relating to this one
-        # for related in get_galaxies_relating(current_cluster['uuid']):
-        #     response += galaxycluster_to_entity(related, link_label="TODO opposite of ".format(related['type']))  # TODO link_label should be opposite
+        for related in get_galaxies_relating(current_cluster['uuid']):
+            related_link_label = ''
+            for rel_in_rel in related['related']:
+                if rel_in_rel['dest-uuid'] == current_cluster['uuid']:
+                    related_link_label = rel_in_rel['type']
+                    break
+            response += galaxycluster_to_entity(related, link_label=related_link_label, link_direction=LinkDirection.OutputToInput)
         return response
