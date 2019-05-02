@@ -1,6 +1,6 @@
-from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter, Unknown
+from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
-from canari.maltego.message import UIMessageType, UIMessage, Label, LinkStyle, MaltegoException, Bookmark
+from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark
 from pymisp import PyMISP
 import json
 import os
@@ -8,6 +8,7 @@ import os.path
 import tempfile
 import time
 
+# FIXME from galaxy to MISP Event is confusing
 
 # mapping_maltego_to_misp = {
 #     'maltego.Hash': ['md5', 'sha1', 'sha256', 'sha224', 'sha384', 'sha512', 'sha512/224', 'sha512/256'],
@@ -497,6 +498,21 @@ def get_galaxy_cluster(uuid=None, tag=None):
         for item in galaxy_cluster_uuids.values():
             if item['tag_name'] == tag:
                 return item
+
+
+def search_galaxy_cluster(keyword):
+    keyword = keyword.lower()
+    global galaxy_cluster_uuids
+    if not galaxy_cluster_uuids:
+        galaxy_cluster_uuids = galaxy_load_cluster_mapping()
+    for item in galaxy_cluster_uuids.values():
+        if keyword in item['tag_name'].lower():
+            yield item
+        else:
+            if 'meta' in item and 'synonyms' in item['meta']:
+                for synonym in item['meta']['synonyms']:
+                    if keyword in synonym.lower():
+                        yield item
 
 
 def get_galaxies_relating(uuid):

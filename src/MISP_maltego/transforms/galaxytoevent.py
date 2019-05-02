@@ -1,7 +1,7 @@
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy
-from MISP_maltego.transforms.common.util import get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, mapping_galaxy_icon
+from MISP_maltego.transforms.common.util import get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
 from canari.maltego.message import UIMessageType, UIMessage
 
 
@@ -56,6 +56,18 @@ class GalaxyToRelations(Transform):
         elif maltego_misp_galaxy.name:
             current_cluster = get_galaxy_cluster(tag=maltego_misp_galaxy.name)
 
+        if not current_cluster:
+            # maybe the user is searching for a cluster based on a substring.
+            # Search in the list for those that match and return galaxy entities
+            potential_clusters = search_galaxy_cluster(maltego_misp_galaxy.name)
+            # TODO check if duplicates are possible
+            if potential_clusters:
+                for potential_cluster in potential_clusters:
+                    response += galaxycluster_to_entity(potential_cluster, link_label='Search result')
+                return response
+
+        # import json
+        # print(json.dumps(current_cluster))
         if not current_cluster:
             response += UIMessage("Galaxy Cluster UUID not in local mapping. Please update local cache; non-public UUID are not supported yet.", type=UIMessageType.Inform)
             return response

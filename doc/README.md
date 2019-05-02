@@ -41,7 +41,7 @@ Example:
 
 ## Transform from MISP Event ID
 While MISP already has a graphing capability we would like to use the power of Maltego to look at the data and expand the work.
-* create a *MISP Event* and give it an `event id`, or `UUID`
+* Create a *MISP Event* and give it an `event id`, or `UUID`
 * One **manual** way is to right click and choose *Local Transforms* > *MISP_maltego* > *Event To Attributes* 
   * Notice the event is transformed to *Attributes*, *Objects*, *Tags*, *Galaxies* and related *MISP Events*
   * You can now further transform on an *Object* > *Object To Attributes* and see the content of the object
@@ -60,6 +60,18 @@ To permit this MISP-Maltego will always add a green bookmark to all the data tha
 
 
 ## Transform from Galaxy
-TODO
+Galaxies are actually tags with much more contextual data. Examples are threat actors, malware families, but also the whole MITRE ATT&CK data is available as Galaxy. All this data comes from the [MISP Galaxy](https://github.com/MISP/misp-galaxy) repository. Today the integration is not done using a MISP server because of limitations in MISP.
+You might encounter Galaxies when transforming from MISP Events or Attributes. An alternative use-case is by starting immediately from a Galaxy.
+There are 3 ways to manually create a good Galaxy Entity.
+1. Using a find capability (see below)
+2. Create the Galaxy and set the UUID. You can find the UUIDs in the [MISP Galaxy](https://github.com/MISP/misp-galaxy) repository.
+3. Create the Galaxy with the right tag name; for example: `misp-galaxy:`
+
+To use the magical search feature:
+* Create a *MISP Galaxy* and type the keyword as value.
+* Run the *Galaxy To Relation* transform, notice the search results will appear as connected entities
+* Remove the non-relevant entities, including the your search-keyword
+![animated galaxy search](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/img/usecase4-galaxy-search.gif)
+
 ## Visualise MITRE ATT&CK
 TODO
