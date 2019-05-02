@@ -73,5 +73,7 @@ To use the magical search feature:
 * Remove the non-relevant entities, including the your search-keyword
 ![animated galaxy search](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/img/usecase4-galaxy-search.gif)
 
-## Visualise MITRE ATT&CK
-TODO
+## Visualize MITRE ATT&CK
+Apply the same steps for MITRE ATT&CK browsing:
+
+![animated ATTACK](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/img/usecase5-attack.gif)
