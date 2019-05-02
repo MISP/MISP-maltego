@@ -77,3 +77,7 @@ To use the magical search feature:
 Apply the same steps for MITRE ATT&CK browsing:
 
 ![animated ATTACK](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/img/usecase5-attack.gif)
+
+You might end up with such a graph:
+
+![ATTACK](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/img/usecase5-attack.png)
