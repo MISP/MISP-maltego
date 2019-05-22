@@ -37,7 +37,7 @@ class MISPObject(Entity):
 
     icon_url = 'file://MISP_maltego/resources/images/MISPObject.png'
     uuid = StringEntityField('uuid', display_name='UUID')
-    event_id = IntegerEntityField('event_id', display_name='Event ID')  # FIXME remove this once MISP provides objects correctly when requesting only the object.  See https://github.com/MISP/MISP/issues/3801
+    event_id = IntegerEntityField('event_id', display_name='Event ID')  # LATER remove this once MISP provides objects correctly when requesting only the object.  See https://github.com/MISP/MISP/issues/3801
     name = StringEntityField('name', display_name='Name', is_value=True)
     meta_category = StringEntityField('meta_category', display_name='Meta Category', matching_rule=MatchingRule.Loose)
     description = StringEntityField('description', display_name='Description', matching_rule=MatchingRule.Loose)

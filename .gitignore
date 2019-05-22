@@ -6,6 +6,7 @@
 *.egg-info
 *.*.swp
 /build/
+/dist/
 # Locally genenerated mtz
 /*.mtz
 

@@ -12,7 +12,7 @@ The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`,
 
 
 ## Installation and User Guide:
-Installation is fairly easy, just read the steps in the [documentation](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md).
+Installation is fairly easy by using `pip`, just read the steps in the [documentation](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md).
 
 The [User Guide](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md#use-cases) gives some example use-cases.
 

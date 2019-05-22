@@ -27,7 +27,7 @@ import time
 #     # 'maltego.Document': [''],
 #     'maltego.PhoneNumber': ['phone-number'],
 #     'maltego.EmailAddress': ['email-src', 'email-dst'],
-#     # 'maltego.Image': [''],  # LATER file image
+#     # 'maltego.Image': [''],  # TODO file image
 #     # 'maltego.Phrase': [''],
 #     'maltego.File': ['filename'],
 #     # 'maltego.Person': [''],
@@ -178,7 +178,7 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
             for c in g['GalaxyCluster']:
                 yield galaxycluster_to_entity(c)
 
-    # TODO today the tag is attached to the event, not the attribute, this is something we want to fix soon.
+    # complement the event tags with the attribute tags.
     if 'Tag' in a and not only_self:
             for t in a['Tag']:
                 combined_tags.append(t['name'])
@@ -212,26 +212,19 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
             if entity_obj == File:
                 labels.append(Label('hash', v_2))
             yield entity_obj_to_entity(entity_obj, v_1, t_1, labels=labels, link_label=link_label, notes=notes, bookmark=Bookmark.Green)  # LATER change the comment to include the second part of the regkey
-        else:
-            yield UIMessage("Type {} of combined type {} not supported for attribute: {}".format(t_1, a['type'], a), type=UIMessageType.Inform)
         if t_2 in mapping_misp_to_maltego:
             entity_obj = mapping_misp_to_maltego[t_2][0]
             labels = [Label('comment', a.get('comment'))]
             if entity_obj == Hash:
                 labels.append(Label('filename', v_1))
             yield entity_obj_to_entity(entity_obj, v_2, t_2, labels=labels, link_label=link_label, notes=notes, bookmark=Bookmark.Green)  # LATER change the comment to include the first part of the regkey
-        else:
-            yield UIMessage("Type {} of combined type {} not supported for attribute: {}".format(t_2, a['type'], a), type=UIMessageType.Inform)
 
     # normal attributes
     elif a['type'] in mapping_misp_to_maltego:
         entity_obj = mapping_misp_to_maltego[a['type']][0]
         yield entity_obj_to_entity(entity_obj, a['value'], a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label, notes=notes, bookmark=Bookmark.Green)
 
-    # not supported in our maltego mapping
-    else:
-        yield Unknown(a['value'], type=a['type'], labels=[Label('comment', a.get('comment'))], link_label=link_label, notes=notes, bookmark=Bookmark.Green)
-        yield UIMessage("Type {} not fully supported for attribute: {}".format(a['type'], a), type=UIMessageType.Inform)
+    # not supported in our maltego mapping are not handled
 
     # LATER : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
