@@ -2,6 +2,7 @@ from canari.maltego.entities import Unknown
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, object_to_entity, get_attribute_in_event, get_attribute_in_object, attribute_to_entity, get_entity_property
+from canari.maltego.message import LinkDirection
 
 __author__ = 'Christophe Vandeplas'
 __copyright__ = 'Copyright 2018, MISP_maltego Project'
@@ -97,16 +98,15 @@ class AttributeToEvent(Transform):
             events_json = misp.search(controller='events', values=request.entity.value, withAttachments=False)
 
         # return the MISPEvent or MISPObject of the attribute
-
         for e in events_json['response']:
             # find the value as attribute
             attr = get_attribute_in_event(e, request.entity.value)
             if attr:
-                response += event_to_entity(e)
+                response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
             # find the value as object
             if 'Object' in e['Event']:
                 for o in e['Event']['Object']:
                     if get_attribute_in_object(o, attribute_value=request.entity.value).get('value'):
-                        response += object_to_entity(o)
+                        response += object_to_entity(o, link_direction=LinkDirection.OutputToInput)
 
         return response

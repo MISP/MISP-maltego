@@ -32,13 +32,8 @@ class GalaxyToEvents(Transform):
             tag_name = maltego_misp_galaxy.value
         events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
         for e in events_json['response']:
-            response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'])
+            response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_direction=LinkDirection.OutputToInput)
         return response
-
-    def on_terminate(self):
-        """This method gets called when transform execution is prematurely terminated. It is only applicable for local
-        transforms. It can be excluded if you don't need it."""
-        pass
 
 
 # @EnableDebugWindow
@@ -66,8 +61,6 @@ class GalaxyToRelations(Transform):
                     response += galaxycluster_to_entity(potential_cluster, link_label='Search result')
                 return response
 
-        # import json
-        # print(json.dumps(current_cluster))
         if not current_cluster:
             response += UIMessage("Galaxy Cluster UUID not in local mapping. Please update local cache; non-public UUID are not supported yet.", type=UIMessageType.Inform)
             return response

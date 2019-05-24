@@ -376,13 +376,20 @@ def tag_matches_note_prefix(tag):
     return False
 
 
-def event_to_entity(e, link_style=LinkStyle.Normal):
+def event_to_entity(e, link_style=LinkStyle.Normal, link_direction=LinkDirection.InputToOutput):
     tags = []
     if 'Tag' in e['Event']:
         for t in e['Event']['Tag']:
             tags.append(t['name'])
     notes = convert_tags_to_note(tags)
-    return MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_style=link_style, notes=notes, bookmark=Bookmark.Green)
+    return MISPEvent(
+        e['Event']['id'],
+        uuid=e['Event']['uuid'],
+        info=e['Event']['info'],
+        link_style=link_style,
+        link_direction=link_direction,
+        notes=notes,
+        bookmark=Bookmark.Green)
 
 
 def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.InputToOutput):
