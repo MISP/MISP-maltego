@@ -1,11 +1,19 @@
 machine("misp.MISPEventToAll", 
-        displayName:"Event to All", 
+        displayName:"Event To All", 
         author:"Christophe Vandeplas",
         description: "Automatically expands MISP Objects to their attributes") {
     start {
         run("MISP_maltego.EventToAttributes")
-        run("MISP_maltego.ObjectToAttributes")
         run("MISP_maltego.AttributeToEvent")
-        run("MISP_maltego.GalaxyToRelations")
+        paths {
+            path {
+                run("MISP_maltego.ObjectToAttributes")
+                // run("MISP_maltego.AttributeToEvent")
+            }
+            path {
+                run("MISP_maltego.GalaxyToRelations")
+            }
+        }
+        
     }
 }
