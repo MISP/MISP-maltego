@@ -229,7 +229,7 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
     # LATER : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
 
-def object_to_entity(o, link_label=None):
+def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOutput):
     # Generate a human readable display-name:
     # - find the first RequiredOneOf that exists
     # - if none, use the first RequiredField
@@ -277,6 +277,7 @@ def object_to_entity(o, link_label=None):
         description=o.get('description'),
         comment=o.get('comment'),
         link_label=link_label,
+        link_direction=link_direction,
         bookmark=Bookmark.Green
     )
 
@@ -293,19 +294,29 @@ def object_to_attributes(o, e):
         for item in attribute_to_entity(a):
             yield item
 
-    # process relationships between objects and attributes
-    if 'ObjectReference' in o:
-        for ref in o['ObjectReference']:
-            # the reference is an Object
-            if ref.get('Object'):
-                # get the full object in the event, as our objectReference included does not contain everything we need
-                sub_object = get_object_in_event(ref['Object']['uuid'], e)
-                yield object_to_entity(sub_object, link_label=ref['relationship_type'])
-            # the reference is an Attribute
-            if ref.get('Attribute'):
-                ref['Attribute']['event_id'] = ref['event_id']   # LATER remove this ugly workaround - object can't be requested directly from MISP using the uuid, and to find a full object we need the event_id
-                for item in attribute_to_entity(ref['Attribute'], link_label=ref['relationship_type']):
-                    yield item
+
+def object_to_relations(o, e):
+    # process forward and reverse references, so just loop over all the objects of the event
+    if 'Object' in e['Event']:
+        for eo in e['Event']['Object']:
+            if 'ObjectReference' in eo:
+                for ref in eo['ObjectReference']:
+                    # we have found original object. Expand to the related object and attributes
+                    if eo['uuid'] == o['uuid']:
+                        # the reference is an Object
+                        if ref.get('Object'):
+                            # get the full object in the event, as our objectReference included does not contain everything we need
+                            sub_object = get_object_in_event(ref['Object']['uuid'], e)
+                            yield object_to_entity(sub_object, link_label=ref['relationship_type'])
+                        # the reference is an Attribute
+                        if ref.get('Attribute'):
+                            ref['Attribute']['event_id'] = ref['event_id']   # LATER remove this ugly workaround - object can't be requested directly from MISP using the uuid, and to find a full object we need the event_id
+                            for item in attribute_to_entity(ref['Attribute'], link_label=ref['relationship_type']):
+                                yield item
+
+                    # reverse-lookup - this is another objects relating the original object
+                    if ref['referenced_uuid'] == o['uuid']:
+                        yield object_to_entity(eo, link_label=ref['relationship_type'], link_direction=LinkDirection.OutputToInput)
 
 
 def get_object_in_event(uuid, e):

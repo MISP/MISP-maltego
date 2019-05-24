@@ -91,7 +91,7 @@ class AttributeToEvent(Transform):
             if not tag_name:
                 tag_name = request.entity.value
             events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
-        # FIXME make it work with object to event
+
         # standard Entities
         else:
             events_json = misp.search(controller='events', values=request.entity.value, withAttachments=False)

@@ -2,7 +2,7 @@ from canari.maltego.entities import Hashtag
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
-from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, tag_matches_note_prefix
+from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, object_to_relations, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
 
 
@@ -158,7 +158,7 @@ class EventToRelations(EventToTransform):
 class ObjectToAttributes(Transform):
     """"Expands an object to its attributes"""
     input_type = MISPObject
-    description = 'Expands an Obect to Attributes'
+    description = 'Expands an Object to Attributes'
 
     def do_transform(self, request, response, config):
         maltego_object = request.entity
@@ -167,6 +167,28 @@ class ObjectToAttributes(Transform):
         for o in event_json['Event']['Object']:
             if o['uuid'] == maltego_object.uuid:
                 for entity in object_to_attributes(o, event_json):
+                    if entity:
+                        response += entity
+                for entity in object_to_relations(o, event_json):
+                    if entity:
+                        response += entity
+
+        return response
+
+
+# @EnableDebugWindow
+class ObjectToRelations(Transform):
+    """Expands an object to the relations of the object"""
+    input_type = MISPObject
+    description = 'Expands an Object to Relations'
+
+    def do_transform(self, request, response, config):
+        maltego_object = request.entity
+        misp = get_misp_connection(config)
+        event_json = misp.get_event(maltego_object.event_id)
+        for o in event_json['Event']['Object']:
+            if o['uuid'] == maltego_object.uuid:
+                for entity in object_to_relations(o, event_json):
                     if entity:
                         response += entity
 
