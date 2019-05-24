@@ -76,7 +76,7 @@ class AttributeToEvent(Transform):
 
     def do_transform(self, request, response, config):
         # skip some Entities
-        skip = ['properties.mispevent', 'properties.mispobject']
+        skip = ['properties.mispevent']
         for i in skip:
             if i in request.entity.fields:
                 return response
@@ -86,14 +86,22 @@ class AttributeToEvent(Transform):
             pass
 
         misp = get_misp_connection(config)
-        # special Entities
+        # from Galaxy
         if 'properties.mispgalaxy' in request.entity.fields:
             tag_name = get_entity_property(request.entity, 'tag_name')
             if not tag_name:
                 tag_name = request.entity.value
             events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
-
-        # standard Entities
+        # from Object
+        elif 'properties.mispobject' in request.entity.fields:
+            if request.entity.fields.get('event_id'):
+                events_json = misp.search(controller='events', eventid=request.entity.fields.get('event_id').value, withAttachments=False)
+                for e in events_json['response']:
+                    response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
+                return response
+            else:
+                return response
+        # standard Entities (normal attributes)
         else:
             events_json = misp.search(controller='events', values=request.entity.value, withAttachments=False)
 
