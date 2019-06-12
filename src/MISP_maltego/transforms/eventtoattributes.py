@@ -35,8 +35,11 @@ class EventToTransform(Transform):
         self.config = config
         maltego_misp_event = request.entity
         self.misp = get_misp_connection(config)
-        self.event_json = self.misp.get_event(maltego_misp_event.id)  # FIXME get it without attachments # FIXME use search + includeAttachments:0, eventid: as request body
-        if not self.event_json.get('Event'):
+        event_id = maltego_misp_event.id
+        search_result = self.misp.search(controller='events', eventid=event_id, withAttachments=False)
+        if search_result.get('response'):
+            self.event_json = search_result['response'].pop()
+        else:
             return False
 
         self.response += event_to_entity(self.event_json)
