@@ -16,6 +16,16 @@ __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
 
 
+class GalaxyTo(Transform):
+    input_type = None
+
+    def __init__(self):
+        self.request = None
+        self.response = None
+        self.config = None
+        self.misp = None
+
+
 # @EnableDebugWindow
 class GalaxyToEvents(Transform):
     """Expands a Galaxy to multiple MISP Events."""

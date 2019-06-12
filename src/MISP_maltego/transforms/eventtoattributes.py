@@ -16,6 +16,8 @@ __maintainer__ = 'Christophe Vandeplas'
 __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
 
+# FIXME have a more human readable version of the MISP event value in the graph. change entity + event_to_entity + do_transform
+
 
 class EventToTransform(Transform):
     input_type = None

@@ -5,11 +5,11 @@ from setuptools import setup, find_packages
 setup(
     name='MISP_maltego',
     author='Christophe Vandeplas',
-    version='1.3.2',
+    version='1.3.4',
     author_email='christophe@vandeplas.com',
     maintainer='Christophe Vandeplas',
     url='https://github.com/MISP/MISP-maltego',
-    description='Maltego transform for interacting with a MISP Threat Sharing community.',
+    description='Maltego transform for interacting with a MISP Threat Sharing community and with MITRE ATT&CK.',
     license='AGPLv3',
     packages=find_packages('src'),
     package_dir={'': 'src'},

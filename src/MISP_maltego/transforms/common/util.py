@@ -8,7 +8,7 @@ import os.path
 import tempfile
 import time
 
-# FIXME from galaxy to MISP Event is confusing
+# FIXME from galaxy 'to MISP Event' is confusing
 
 # mapping_maltego_to_misp = {
 #     'maltego.Hash': ['md5', 'sha1', 'sha256', 'sha224', 'sha384', 'sha512', 'sha512/224', 'sha512/256'],
