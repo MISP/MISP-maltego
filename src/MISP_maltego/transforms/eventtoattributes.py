@@ -39,8 +39,8 @@ class EventToTransform(Transform):
         self.misp = get_misp_connection(config)
         event_id = maltego_misp_event.id
         search_result = self.misp.search(controller='events', eventid=event_id, withAttachments=False)
-        if search_result.get('response'):
-            self.event_json = search_result['response'].pop()
+        if search_result:
+            self.event_json = search_result.pop()
         else:
             return False
 

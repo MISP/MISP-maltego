@@ -32,18 +32,12 @@ class AttributeInMISP(Transform):
 
         misp = get_misp_connection(config)
         events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
-        in_misp = False
-        for e in events_json['response']:
-            in_misp = True
-            break
-        # find the object again, and bookmark it green
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
-        if in_misp:
-            for e in events_json['response']:
-                attr = get_attribute_in_event(e, maltego_misp_attribute.value)
-                if attr:
-                    for item in attribute_to_entity(attr, only_self=True):
-                        response += item
+        for e in events_json:
+            attr = get_attribute_in_event(e, maltego_misp_attribute.value)
+            if attr:
+                for item in attribute_to_entity(attr, only_self=True):
+                    response += item
         return response
 
 
@@ -92,21 +86,24 @@ class AttributeToEvent(Transform):
             if not tag_name:
                 tag_name = request.entity.value
             events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
+            for e in events_json:
+                response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
+            return response
         # from Object
         elif 'properties.mispobject' in request.entity.fields:
             if request.entity.fields.get('event_id'):
                 events_json = misp.search(controller='events', eventid=request.entity.fields.get('event_id').value, withAttachments=False)
-                for e in events_json['response']:
+                for e in events_json:
                     response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
                 return response
             else:
                 return response
         # standard Entities (normal attributes)
         else:
-            events_json = misp.search(controller='events', values=request.entity.value, withAttachments=False)
+            events_json = misp.search(controller='events', value=request.entity.value, withAttachments=False)
 
         # return the MISPEvent or MISPObject of the attribute
-        for e in events_json['response']:
+        for e in events_json:
             # find the value as attribute
             attr = get_attribute_in_event(e, request.entity.value)
             if attr:

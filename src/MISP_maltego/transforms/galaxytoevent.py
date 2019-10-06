@@ -41,7 +41,7 @@ class GalaxyToEvents(Transform):
         else:
             tag_name = maltego_misp_galaxy.value
         events_json = misp.search(controller='events', tags=tag_name, withAttachments=False)
-        for e in events_json['response']:
+        for e in events_json:
             response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_direction=LinkDirection.OutputToInput)
         return response
 

@@ -1,7 +1,7 @@
 from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
 from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection
-from pymisp import PyMISP
+from pymisp import ExpandedPyMISP as PyMISP
 import json
 import os
 import os.path
@@ -235,7 +235,7 @@ def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOut
     # - if none, use the first RequiredField
     # LATER further finetune the human readable version of this object
     misp = get_misp_connection()
-    o_template = misp.get_object_template_id(o['template_uuid'])
+    o_template = misp.get_object_template(o['template_uuid'])
     human_readable = None
     try:
         found = False
