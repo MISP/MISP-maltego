@@ -1,60 +1,18 @@
 from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
+from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection, UIMessage, UIMessageType
+from distutils.version import StrictVersion
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
-from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection
 from pymisp import ExpandedPyMISP as PyMISP
 import json
 import os
 import os.path
+import requests
 import tempfile
 import time
 
 # FIXME from galaxy 'to MISP Event' is confusing
 
-# mapping_maltego_to_misp = {
-#     'maltego.Hash': ['md5', 'sha1', 'sha256', 'sha224', 'sha384', 'sha512', 'sha512/224', 'sha512/256'],
-#     # 'maltego.Banner': [''],
-#     # 'maltego.WebTitle': [''],
-#     'maltego.Domain': ['domain', 'hostname'],
-#     # 'maltego.Netblock': [''],
-#     # 'maltego.MXRecord': [''],
-#     'maltego.IPv4Address': ['ip-src', 'ip-dst', 'ip'],
-#     'maltego.URL': ['url', 'uri'],
-#     'maltego.DNSName': ['domain', 'hostname'],
-#     'maltego.AS': ['AS'],
-#     # 'maltego.UniqueIdentifier': [''],
-#     'maltego.Website': ['domain', 'hostname'],
-#     'maltego.NSRecord': ['domain', 'hostname'],
-#     # 'maltego.Document': [''],
-#     'maltego.PhoneNumber': ['phone-number'],
-#     'maltego.EmailAddress': ['email-src', 'email-dst'],
-#     # 'maltego.Image': [''],  # TODO file image
-#     # 'maltego.Phrase': [''],
-#     'maltego.File': ['filename'],
-#     # 'maltego.Person': [''],
-#     # 'maltego.Sentiment': [''],
-#     # 'maltego.Alias': [''],
-#     # 'maltego.GPS': [''],
-#     # 'maltego.CircularArea': [''],
-#     # 'maltego.NominatimLocation': [''],
-#     # 'maltego.Location': [''],
-#     # 'maltego.Device': [''],
-#     # 'maltego.affiliation.Flickr': [''],
-#     # 'maltego.FacebookObject': [''],
-#     # 'maltego.hashtag': [''],
-#     # 'maltego.affiliation.Twitter': [''],
-#     # 'maltego.affiliation.Facebook': [''],
-#     # 'maltego.Twit': [''],
-#     # 'maltego.Port': [''],
-#     # 'maltego.Service': [''],
-#     # 'maltego.BuiltWithTechnology': [''],
-# }
-
-# mapping_misp_to_maltego = {}
-# for key, vals in mapping_maltego_to_misp.items():
-#     for val in vals:
-#         if val not in mapping_misp_to_maltego:
-#             mapping_misp_to_maltego[val] = []
-#         mapping_misp_to_maltego[val].append(key)
+__version__ = '1.3.4'
 
 mapping_misp_to_maltego = {
     'AS': [AS],
@@ -127,6 +85,40 @@ mapping_galaxy_icon = {
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
 misp_connection = None
+update_url = 'https://raw.githubusercontent.com/MISP/MISP-maltego/master/setup.py'
+local_path_root = os.path.join(tempfile.gettempdir(), 'MISP-maltego')
+local_path_version = os.path.join(local_path_root, 'versioncheck')
+if not os.path.exists(local_path_root):
+    os.mkdir(local_path_root)
+
+
+def check_update(config):
+    # only raise the alert once a day/reboot to the user.
+    try:
+        if time.time() - os.path.getmtime(local_path_version) > 60 * 60 * 24:  # check the timestamp of the file
+            recheck = True
+        else:
+            recheck = False
+    except Exception:  # file does not exist, so check version
+        recheck = True
+    if not recheck:
+        return None
+    # remember we checked the version
+    from pathlib import Path
+    Path(local_path_version).touch()
+    # UIMessageType must be Fatal as otherwise it is not shown to the user.
+    if 'MISP_maltego.local.check_updates' not in config:
+        return UIMessage("'check_updates' parameter missing in '.canari/MISP_maltego.conf'. Please set 'check_updates = True/False'.", type=UIMessageType.Fatal)
+    if config['MISP_maltego.local.check_updates']:
+        # check the version
+        r = requests.get(update_url)
+        for l in r.text.splitlines():
+            if 'version=' in l:
+                online_ver = l.strip().strip(',').split('=').pop().strip("'")
+                if StrictVersion(online_ver) > StrictVersion(__version__):
+                    return UIMessage("A new version of MISP-Maltego is available. Use pip3 --upgrade MISP-maltego to upgrade.", type=UIMessageType.Fatal)
+                break
+    return None
 
 
 def get_misp_connection(config=None):
@@ -427,7 +419,6 @@ def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.Inp
 # LATER this uses the galaxies from github as the MISP web UI does not fully support the Galaxies in the webui.
 # See https://github.com/MISP/MISP/issues/3801
 galaxy_archive_url = 'https://github.com/MISP/misp-galaxy/archive/master.zip'
-local_path_root = os.path.join(tempfile.gettempdir(), 'MISP-maltego')
 local_path_uuid_mapping = os.path.join(local_path_root, 'MISP_maltego_galaxy_mapping.json')
 local_path_clusters = os.path.join(local_path_root, 'misp-galaxy-master', 'clusters')
 galaxy_cluster_uuids = None
@@ -441,13 +432,10 @@ def galaxy_update_local_copy(force=False):
     from zipfile import ZipFile
 
     # some aging and automatic re-downloading
-    if not os.path.exists(local_path_root):
-        os.mkdir(local_path_root)
-        force = True
     if not os.path.exists(local_path_uuid_mapping):
         force = True
     else:
-        # force update if cache is older thn 24 hours
+        # force update if cache is older than 24 hours
         if time.time() - os.path.getmtime(local_path_uuid_mapping) > 60 * 60 * 24:
             force = True
 

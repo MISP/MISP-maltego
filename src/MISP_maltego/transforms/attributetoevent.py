@@ -1,7 +1,7 @@
 from canari.maltego.entities import Unknown
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
-from MISP_maltego.transforms.common.util import get_misp_connection, event_to_entity, object_to_entity, get_attribute_in_event, get_attribute_in_object, attribute_to_entity, get_entity_property
+from MISP_maltego.transforms.common.util import check_update, get_misp_connection, event_to_entity, object_to_entity, get_attribute_in_event, get_attribute_in_object, attribute_to_entity, get_entity_property
 from canari.maltego.message import LinkDirection
 
 __author__ = 'Christophe Vandeplas'
@@ -22,6 +22,7 @@ class AttributeInMISP(Transform):
     input_type = Unknown
 
     def do_transform(self, request, response, config):
+        response += check_update(config)
         maltego_misp_attribute = request.entity
         # skip MISP Events (value = int)
         try:
@@ -69,6 +70,7 @@ class AttributeToEvent(Transform):
     input_type = Unknown
 
     def do_transform(self, request, response, config):
+        response += check_update(config)
         # skip some Entities
         skip = ['properties.mispevent']
         for i in skip:

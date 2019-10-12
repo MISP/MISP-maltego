@@ -2,7 +2,7 @@ from canari.maltego.entities import Hashtag
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
-from MISP_maltego.transforms.common.util import get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, object_to_relations, tag_matches_note_prefix
+from MISP_maltego.transforms.common.util import check_update, get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, object_to_relations, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
 
 
@@ -35,6 +35,7 @@ class EventToTransform(Transform):
         self.request = request
         self.response = response
         self.config = config
+        self.response += check_update(config)
         maltego_misp_event = request.entity
         self.misp = get_misp_connection(config)
         event_id = maltego_misp_event.id
@@ -166,6 +167,7 @@ class ObjectToAttributes(Transform):
     description = 'Expands an Object to Attributes'
 
     def do_transform(self, request, response, config):
+        response += check_update(config)
         maltego_object = request.entity
         misp = get_misp_connection(config)
         event_json = misp.get_event(maltego_object.event_id)
@@ -188,6 +190,7 @@ class ObjectToRelations(Transform):
     description = 'Expands an Object to Relations'
 
     def do_transform(self, request, response, config):
+        response += check_update(config)
         maltego_object = request.entity
         misp = get_misp_connection(config)
         event_json = misp.get_event(maltego_object.event_id)

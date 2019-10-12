@@ -1,7 +1,7 @@
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy
-from MISP_maltego.transforms.common.util import get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
+from MISP_maltego.transforms.common.util import check_update, get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
 from canari.maltego.message import UIMessageType, UIMessage, LinkDirection
 
 
@@ -34,6 +34,7 @@ class GalaxyToEvents(Transform):
     input_type = MISPGalaxy
 
     def do_transform(self, request, response, config):
+        response += check_update(config)
         maltego_misp_galaxy = request.entity
         misp = get_misp_connection(config)
         if maltego_misp_galaxy.tag_name:
@@ -52,6 +53,7 @@ class GalaxyToRelations(Transform):
     input_type = MISPGalaxy
 
     def do_transform(self, request, response, config):
+        response += check_update(config)
         maltego_misp_galaxy = request.entity
 
         if maltego_misp_galaxy.uuid:
