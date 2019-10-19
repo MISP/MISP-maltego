@@ -1,0 +1,14 @@
+machine("misp.MISPEventToAttributes", 
+        displayName:"Event To Attributes & Objects", 
+        author:"Christophe Vandeplas",
+        description: "Also automatically expands MISP Objects to their attributes") {
+    start {
+        paths {
+            run("MISP_maltego.EventToAttributes")
+            path {
+                run("MISP_maltego.EventToObjects")
+                run("MISP_maltego.ObjectToAttributes")
+            }
+        }
+    }
+}
