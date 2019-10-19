@@ -116,7 +116,12 @@ def check_update(config):
             if 'version=' in l:
                 online_ver = l.strip().strip(',').split('=').pop().strip("'")
                 if StrictVersion(online_ver) > StrictVersion(__version__):
-                    return UIMessage("A new version of MISP-Maltego is available. Use pip3 --upgrade MISP-maltego to upgrade.", type=UIMessageType.Fatal)
+                    message = ('A new version of MISP-Maltego is available.\n'
+                               'To upgrade, please:\n'
+                               '    pip3 --upgrade MISP-maltego'
+                               '    canari create-profile MISP_maltego\n'
+                               '    And import the newly generated .mtz bundle in Maltego (Import > Import Configuration)')
+                    return UIMessage(message, type=UIMessageType.Fatal)
                 break
     return None
 
