@@ -463,23 +463,27 @@ def galaxy_update_local_copy(force=False):
 
         cluster_uuids = {}
         for galaxy_fname in galaxies_fnames:
-            fullPathClusters = os.path.join(local_path_clusters, galaxy_fname)
-            with open(fullPathClusters) as fp:
-                galaxy = json.load(fp)
-            with open(fullPathClusters.replace('clusters', 'galaxies')) as fg:
-                galaxy_main = json.load(fg)
-            for cluster in galaxy['values']:
-                if 'uuid' not in cluster:
-                    continue
-                # skip deprecated galaxies/clusters
-                if galaxy_main['namespace'] == 'deprecated':
-                    continue
-                # keep track of the cluster, but also enhance it to look like the cluster we receive when accessing the web.
-                cluster_uuids[cluster['uuid']] = cluster
-                cluster_uuids[cluster['uuid']]['type'] = galaxy['type']
-                cluster_uuids[cluster['uuid']]['tag_name'] = 'misp-galaxy:{}="{}"'.format(galaxy['type'], cluster['value'])
-                if 'icon' in galaxy_main:
-                    cluster_uuids[cluster['uuid']]['icon'] = galaxy_main['icon']
+            try:
+                fullPathClusters = os.path.join(local_path_clusters, galaxy_fname)
+                with open(fullPathClusters) as fp:
+                    galaxy = json.load(fp)
+                with open(fullPathClusters.replace('clusters', 'galaxies')) as fg:
+                    galaxy_main = json.load(fg)
+                for cluster in galaxy['values']:
+                    if 'uuid' not in cluster:
+                        continue
+                    # skip deprecated galaxies/clusters
+                    if galaxy_main['namespace'] == 'deprecated':
+                        continue
+                    # keep track of the cluster, but also enhance it to look like the cluster we receive when accessing the web.
+                    cluster_uuids[cluster['uuid']] = cluster
+                    cluster_uuids[cluster['uuid']]['type'] = galaxy['type']
+                    cluster_uuids[cluster['uuid']]['tag_name'] = 'misp-galaxy:{}="{}"'.format(galaxy['type'], cluster['value'])
+                    if 'icon' in galaxy_main:
+                        cluster_uuids[cluster['uuid']]['icon'] = galaxy_main['icon']
+            except Exception:
+                # we ignore incorrect galaxies
+                pass
 
         with open(local_path_uuid_mapping, 'w') as f:
             json.dump(cluster_uuids, f, sort_keys=True, indent=4)
