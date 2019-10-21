@@ -32,7 +32,7 @@ class AttributeInMISP(Transform):
             pass
 
         misp = get_misp_connection(config)
-        events_json = misp.search(controller='events', values=maltego_misp_attribute.value, withAttachments=False)
+        events_json = misp.search(controller='events', value=maltego_misp_attribute.value, withAttachments=False)
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
         for e in events_json:
             attr = get_attribute_in_event(e, maltego_misp_attribute.value)
