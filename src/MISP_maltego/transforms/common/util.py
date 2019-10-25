@@ -12,7 +12,7 @@ import time
 
 # FIXME from galaxy 'to MISP Event' is confusing
 
-__version__ = '1.3.4'
+__version__ = '1.3.7'  # also update version in setup.py
 
 mapping_misp_to_maltego = {
     'AS': [AS],
