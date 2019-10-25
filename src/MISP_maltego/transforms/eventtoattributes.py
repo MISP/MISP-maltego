@@ -39,7 +39,7 @@ class EventToTransform(Transform):
         maltego_misp_event = request.entity
         self.misp = get_misp_connection(config)
         event_id = maltego_misp_event.id
-        search_result = self.misp.search(controller='events', eventid=event_id, withAttachments=False)
+        search_result = self.misp.search(controller='events', eventid=event_id, with_attachments=False)
         if search_result:
             self.event_json = search_result.pop()
         else:
