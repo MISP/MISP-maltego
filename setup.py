@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from setuptools import setup, find_packages
+from src.transform.common.util import __version__
 
 setup(
     name='MISP_maltego',
     author='Christophe Vandeplas',
-    version='1.3.6',
+    version=__version__,
     author_email='christophe@vandeplas.com',
     maintainer='Christophe Vandeplas',
     url='https://github.com/MISP/MISP-maltego',
