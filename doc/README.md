@@ -5,7 +5,7 @@ This user guide should help you through the installation of **MISP-Maltego**, an
 ## Installation
 These instructions have been tested on Ubuntu 18.04 LTS, but should be similar on other systems.
 1. Download and install [Maltego](https://www.paterva.com/web7/downloads.php)
-2. Install using pip: `pip3 install MISP-maltego`
+2. Install using pip: `sudo pip3 install MISP-maltego`
 3. Generate the Maltego bundle: `canari create-profile MISP_maltego`
 4. Import this bundle in Maltego. 
    1. Open Maltego
