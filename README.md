@@ -20,7 +20,7 @@ The [User Guide](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md#
 ## Screenshot
 ![Screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/screenshot.png)
 
-![ATT&CK](https://github.com/MISP/MISP-maltego/blob/master/doc/attack.jpg)
+![ATT&CK](https://github.com/MISP/MISP-maltego/blob/master/doc/attack.png)
 
 
 ## License
