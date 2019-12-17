@@ -60,7 +60,9 @@ class GalaxyToTransform(Transform):
             # TODO check if duplicates are possible
             if potential_clusters:
                 for potential_cluster in potential_clusters:
-                    response += galaxycluster_to_entity(potential_cluster, link_label='Search result')
+                    new_entity = galaxycluster_to_entity(potential_cluster, link_label='Search result')
+                    if isinstance(new_entity, type_filter):
+                        response += new_entity
                 return response
 
         if not current_cluster:
