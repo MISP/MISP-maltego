@@ -19,8 +19,10 @@ These instructions have been tested on Ubuntu 18.04 LTS, but should be similar o
 MISP-Maltego tries to use as much as possible the default Paterva entities, or the most popular from the community. It however comes with a few custom entities: 
 * **MISPEvent**: A representation of an *Event* on MISP, containing *Attributes* (MISP) / *Entities* (Maltego)
 * **MISPObject**: A way to group associated attributes in a structured way.
-* **MISPGalaxy**: A *Tag* containing much more metadata. Please refer to the [MISP Galaxy
-](https://github.com/MISP/misp-galaxy) for more information. **MITRE ATT&CK** is for example completely available through MISPGalaxy entities (see use-cases for an example)
+* **MISPGalaxy**: A *Tag* containing much more metadata. Please refer to the [MISP Galaxy](https://github.com/MISP/misp-galaxy) for more information. **MITRE ATT&CK** is for example completely available through MISPGalaxy entities (see use-cases for an example)
+* **Attack Technique**: Attack patterns or techniques, see [MITRE ATT&CK](https://attack.mitre.org/techniques/enterprise/) for more information.
+* **Threat Actor**: Threat actor or intrusion sets.
+* **Software**: Software is a generic term for custom or commercial code, operating system utilities, open-source software, or other tools used to conduct behavior modeled in ATT&CK. 
 
 # Use Cases
 ## Transform on existing data

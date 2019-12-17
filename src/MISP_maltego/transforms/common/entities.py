@@ -13,7 +13,10 @@ __status__ = 'Development'
 __all__ = [
     'MISPEvent',
     'MISPObject',
-    'MISPGalaxy'
+    'MISPGalaxy',
+    'ThreatActor',
+    'Software',
+    'AttackTechnique'
 ]
 
 
@@ -55,3 +58,18 @@ class MISPGalaxy(Entity):
     cluster_value = StringEntityField('value', display_name='Value', matching_rule=MatchingRule.Loose)
     synonyms = StringEntityField('synonyms', display_name='Synonyms', matching_rule=MatchingRule.Loose)
     tag_name = StringEntityField('tag_name', display_name='Tag')
+
+
+class ThreatActor(MISPGalaxy):
+    _category_ = 'MISP'
+    _namespace_ = 'misp'
+
+
+class Software(MISPGalaxy):
+    _category_ = 'MISP'
+    _namespace_ = 'misp'
+
+
+class AttackTechnique(MISPGalaxy):
+    _category_ = 'MISP'
+    _namespace_ = 'misp'

@@ -1,7 +1,7 @@
 from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection, UIMessage, UIMessageType
 from distutils.version import StrictVersion
-from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
+from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy, ThreatActor, Software, AttackTechnique
 from pymisp import ExpandedPyMISP as PyMISP
 import json
 import os
@@ -12,7 +12,7 @@ import time
 
 # FIXME from galaxy 'to MISP Event' is confusing
 
-__version__ = '1.3.7'  # also update version in setup.py
+__version__ = '1.4.0'  # also update version in setup.py
 
 mapping_misp_to_maltego = {
     'AS': [AS],
@@ -81,6 +81,40 @@ mapping_galaxy_icon = {
     # "user-secret": "mitre-intrusion-set",
     "user-secret": "threat_actor",
 }
+
+mapping_galaxy_type = {
+    # 'amitt-misinformation-pattern': '',
+    'android': Software,
+    'backdoor': Software,
+    'banker': Software,
+    'botnet': Software,
+    # 'branded-vulnerability': '',
+    # 'cert-eu-govsector': '',
+    'cloud-security': AttackTechnique,
+    'exploit-kit': Software,
+    'financial-fraud': AttackTechnique,
+    'guidelines': AttackTechnique,
+    'malpedia': Software,
+    'microsoft-activity-group': ThreatActor,
+    'mitre-attack-pattern': AttackTechnique,
+    # 'mitre-course-of-action': '',
+    'mitre-intrusion-set': ThreatActor,
+    'mitre-malware': Software,
+    'mitre-tool': Software,
+    # 'preventive-measure': '',
+    'ransomware': Software,
+    'rat': Software,
+    # 'region': '',
+    # 'sector': '',
+    'social-dark-patterns': AttackTechnique,
+    'stealer': Software,
+    'surveillance-vendor': ThreatActor,
+    # 'target-information': '',
+    'tds': Software,
+    'threat-actor': ThreatActor,
+    'tool': Software
+}
+
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
@@ -399,15 +433,20 @@ def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.Inp
         synonyms = ''
 
     galaxy_cluster = get_galaxy_cluster(c['uuid'])
-    icon_url = None
-    if 'icon' in galaxy_cluster:  # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
-        try:
-            icon_url = mapping_galaxy_icon[galaxy_cluster['icon']]
-        except Exception:
-            # it's not in our mapping, just ignore and leave the default Galaxy icon
-            pass
+    # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
+    try:
+        icon_url = mapping_galaxy_icon[galaxy_cluster['icon']]
+    except KeyError:
+        icon_url = None
+        # it's not in our mapping, just ignore and leave the default Galaxy icon
+        pass
 
-    return MISPGalaxy(
+    # create the right sub-galaxy: ThreatActor, Software, AttackTechnique, ... or MISPGalaxy
+    try:
+        galaxy_type = mapping_galaxy_type[galaxy_cluster['type']]
+    except KeyError:
+        galaxy_type = MISPGalaxy
+    return galaxy_type(
         '{}\n{}'.format(c['type'], c['value']),
         uuid=c['uuid'],
         description=c.get('description'),

@@ -1,6 +1,6 @@
 from canari.maltego.transform import Transform
 # from canari.framework import EnableDebugWindow
-from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy
+from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy, ThreatActor, Software, AttackTechnique
 from MISP_maltego.transforms.common.util import check_update, get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
 from canari.maltego.message import UIMessageType, UIMessage, LinkDirection
 
@@ -14,16 +14,6 @@ __version__ = '0.1'
 __maintainer__ = 'Christophe Vandeplas'
 __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
-
-
-class GalaxyTo(Transform):
-    input_type = None
-
-    def __init__(self):
-        self.request = None
-        self.response = None
-        self.config = None
-        self.misp = None
 
 
 # @EnableDebugWindow
@@ -48,14 +38,14 @@ class GalaxyToEvents(Transform):
 
 
 # @EnableDebugWindow
-class GalaxyToRelations(Transform):
-    """Expans a Galaxy to related Galaxies and Clusters"""
-    input_type = MISPGalaxy
+class GalaxyToTransform(Transform):
+    input_type = None
 
-    def do_transform(self, request, response, config):
+    def do_transform(self, request, response, config, type_filter=MISPGalaxy):
         response += check_update(config)
         maltego_misp_galaxy = request.entity
 
+        current_cluster = None
         if maltego_misp_galaxy.uuid:
             current_cluster = get_galaxy_cluster(uuid=maltego_misp_galaxy.uuid)
         elif maltego_misp_galaxy.tag_name:
@@ -63,7 +53,7 @@ class GalaxyToRelations(Transform):
         elif maltego_misp_galaxy.name:
             current_cluster = get_galaxy_cluster(tag=maltego_misp_galaxy.name)
 
-        if not current_cluster:
+        if not current_cluster and maltego_misp_galaxy.name != '-':
             # maybe the user is searching for a cluster based on a substring.
             # Search in the list for those that match and return galaxy entities
             potential_clusters = search_galaxy_cluster(maltego_misp_galaxy.name)
@@ -77,8 +67,8 @@ class GalaxyToRelations(Transform):
             response += UIMessage("Galaxy Cluster UUID not in local mapping. Please update local cache; non-public UUID are not supported yet.", type=UIMessageType.Inform)
             return response
         c = current_cluster
-        # update existing object
 
+        # update existing object
         galaxy_cluster = get_galaxy_cluster(c['uuid'])
         icon_url = None
         if 'icon' in galaxy_cluster:  # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
@@ -100,12 +90,15 @@ class GalaxyToRelations(Transform):
         request.entity.tag_name = c['tag_name']
         request.entity.icon_url = icon_url
         # response += request.entity
+
         # find related objects
         if 'related' in current_cluster:
             for related in current_cluster['related']:
                 related_cluster = get_galaxy_cluster(related['dest-uuid'])
                 if related_cluster:
-                    response += galaxycluster_to_entity(related_cluster, link_label=related['type'])
+                    new_entity = galaxycluster_to_entity(related_cluster, link_label=related['type'])
+                    if isinstance(new_entity, type_filter):
+                        response += new_entity
         # find objects that are relating to this one
         for related in get_galaxies_relating(current_cluster['uuid']):
             related_link_label = ''
@@ -113,5 +106,39 @@ class GalaxyToRelations(Transform):
                 if rel_in_rel['dest-uuid'] == current_cluster['uuid']:
                     related_link_label = rel_in_rel['type']
                     break
-            response += galaxycluster_to_entity(related, link_label=related_link_label, link_direction=LinkDirection.OutputToInput)
+            new_entity = galaxycluster_to_entity(related, link_label=related_link_label, link_direction=LinkDirection.OutputToInput)
+            if isinstance(new_entity, type_filter):
+                response += new_entity
         return response
+
+
+class GalaxyToRelations(GalaxyToTransform):
+    """Expands a Galaxy to related Galaxies and Clusters"""
+    input_type = MISPGalaxy
+
+    def do_transform(self, request, response, config, type_filter=MISPGalaxy):
+        return super().do_transform(request, response, config, type_filter)
+
+
+class GalaxyToSoftware(GalaxyToTransform):
+    """Expands a Galaxy to related Software/Tool Galaxies"""
+    input_type = MISPGalaxy
+
+    def do_transform(self, request, response, config, type_filter=Software):
+        return super().do_transform(request, response, config, type_filter)
+
+
+class GalaxyToThreatActor(GalaxyToTransform):
+    """Expands a Galaxy to related ThreatActor Galaxies"""
+    input_type = MISPGalaxy
+
+    def do_transform(self, request, response, config, type_filter=ThreatActor):
+        return super().do_transform(request, response, config, type_filter)
+
+
+class GalaxyToAttackTechnique(GalaxyToTransform):
+    """Expands a Galaxy to related Attack Techniques Galaxies"""
+    input_type = MISPGalaxy
+
+    def do_transform(self, request, response, config, type_filter=AttackTechnique):
+        return super().do_transform(request, response, config, type_filter)
