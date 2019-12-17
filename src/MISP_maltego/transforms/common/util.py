@@ -191,7 +191,7 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
 
     # special cases
     if a['type'] in ('url', 'uri'):
-        yield(URL(url=a['value'], link_label=link_label, notes=notes, bookmark=Bookmark.Green))
+        yield(URL(url=a['value'], short_title=a['value'], link_label=link_label, notes=notes, bookmark=Bookmark.Green))
         return
 
     # attribute is from an object, and a relation gives better understanding of the type of attribute
