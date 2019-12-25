@@ -1,5 +1,6 @@
 from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
 from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection, UIMessage, UIMessageType
+from canari.mode import is_local_exec_mode, is_remote_exec_mode
 from distutils.version import StrictVersion
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy, ThreatActor, Software, AttackTechnique
 from pymisp import ExpandedPyMISP as PyMISP
@@ -124,9 +125,13 @@ local_path_root = os.path.join(tempfile.gettempdir(), 'MISP-maltego')
 local_path_version = os.path.join(local_path_root, 'versioncheck')
 if not os.path.exists(local_path_root):
     os.mkdir(local_path_root)
+    os.chmod(local_path_root, mode=0o777)  # temporary workaround - see https://github.com/redcanari/canari3/issues/61
 
 
 def check_update(config):
+    # Do not check updates if running as remote transform
+    if is_remote_exec_mode():
+        return None
     # only raise the alert once a day/reboot to the user.
     try:
         if time.time() - os.path.getmtime(local_path_version) > 60 * 60 * 24:  # check the timestamp of the file

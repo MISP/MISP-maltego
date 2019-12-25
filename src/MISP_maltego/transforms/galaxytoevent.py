@@ -117,6 +117,7 @@ class GalaxyToTransform(Transform):
 class GalaxyToRelations(GalaxyToTransform):
     """Expands a Galaxy to related Galaxies and Clusters"""
     input_type = MISPGalaxy
+    remote = True
 
     def do_transform(self, request, response, config, type_filter=MISPGalaxy):
         return super().do_transform(request, response, config, type_filter)
@@ -125,6 +126,7 @@ class GalaxyToRelations(GalaxyToTransform):
 class GalaxyToSoftware(GalaxyToTransform):
     """Expands a Galaxy to related Software/Tool Galaxies"""
     input_type = MISPGalaxy
+    remote = True
 
     def do_transform(self, request, response, config, type_filter=Software):
         return super().do_transform(request, response, config, type_filter)
@@ -133,6 +135,7 @@ class GalaxyToSoftware(GalaxyToTransform):
 class GalaxyToThreatActor(GalaxyToTransform):
     """Expands a Galaxy to related ThreatActor Galaxies"""
     input_type = MISPGalaxy
+    remote = True
 
     def do_transform(self, request, response, config, type_filter=ThreatActor):
         return super().do_transform(request, response, config, type_filter)
@@ -141,6 +144,7 @@ class GalaxyToThreatActor(GalaxyToTransform):
 class GalaxyToAttackTechnique(GalaxyToTransform):
     """Expands a Galaxy to related Attack Techniques Galaxies"""
     input_type = MISPGalaxy
+    remote = True
 
     def do_transform(self, request, response, config, type_filter=AttackTechnique):
         return super().do_transform(request, response, config, type_filter)
