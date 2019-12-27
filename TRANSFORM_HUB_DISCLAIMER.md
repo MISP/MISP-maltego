@@ -1,5 +1,5 @@
 # MISP Maltego Remote Transform Disclaimer
-When using the MISP Maltego transforms using the Transform Hub (not the locally installed version) you need to know you are are sending data, including your MISP URL and API key to 3rd parties.
+**When using the MISP Maltego transforms using the Transform Hub (not the locally installed version) you need to know you are are sending data, including your MISP URL and API key to 3rd parties.**
 
 The public Transform Distribution Server (TDS) is located on the Internet and is free for all to use. It’s a convenient way to immediately start writing remote transforms. Since this server is located on Paterva’s infrastructure data (entity, and settings) will be flowing from the Maltego GUI to this server. Paterva states they DO NOT store the details of your transforms (entities, MISP URL, API KEY).
 
