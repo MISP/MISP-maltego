@@ -18,8 +18,9 @@ __status__ = 'Development'
 # @EnableDebugWindow
 class AttributeInMISP(Transform):
     """Green bookmark if known in MISP"""
-    display_name = 'in MISP?'
     input_type = Unknown
+    display_name = 'in MISP?'
+    remote = True
 
     def do_transform(self, request, response, config):
         response += check_update(config)
@@ -31,7 +32,7 @@ class AttributeInMISP(Transform):
         except Exception:
             pass
 
-        misp = get_misp_connection(config)
+        misp = get_misp_connection(config, request.parameters)
         events_json = misp.search(controller='events', value=maltego_misp_attribute.value, with_attachments=False)
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
         for e in events_json:
@@ -48,10 +49,11 @@ class AttributeInMISP(Transform):
 # class NetblockToAttributes(Transform):
 #     display_name = 'to MISP Attributes'
 #     input_type = Netblock
+#     remote = True
 
 #     def do_transform(self, request, response, config):
 #         maltego_misp_attribute = request.entity
-#         misp = get_misp_connection(config)
+#         misp = get_misp_connection(config, request.parameters)
 #         import ipaddress
 #         ip_start, ip_end = maltego_misp_attribute.value.split('-')
 #         # FIXME make this work with IPv4 and IPv6
@@ -66,8 +68,9 @@ class AttributeInMISP(Transform):
 
 # @EnableDebugWindow
 class AttributeToEvent(Transform):
-    display_name = 'to MISP Event'
     input_type = Unknown
+    display_name = 'to MISP Event'
+    remote = True
 
     def do_transform(self, request, response, config):
         response += check_update(config)
@@ -81,7 +84,7 @@ class AttributeToEvent(Transform):
             # placeholder for https://github.com/MISP/MISP-maltego/issues/11
             pass
 
-        misp = get_misp_connection(config)
+        misp = get_misp_connection(config, request.parameters)
         # from Galaxy
         if 'properties.mispgalaxy' in request.entity.fields:
             tag_name = get_entity_property(request.entity, 'tag_name')

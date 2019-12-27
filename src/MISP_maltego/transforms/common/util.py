@@ -165,24 +165,36 @@ def check_update(config):
     return None
 
 
-def get_misp_connection(config=None):
+def get_misp_connection(config=None, parameters=None):
     global misp_connection
     if misp_connection:
         return misp_connection
     if not config:
         raise MaltegoException("ERROR: MISP connection not yet established, and config not provided as parameter.")
-    if config['MISP_maltego.local.misp_verify'] in ['True', 'true', 1, 'yes', 'Yes']:
-        misp_verify = True
-    else:
-        misp_verify = False
-    if config['MISP_maltego.local.misp_debug'] in ['True', 'true', 1, 'yes', 'Yes']:
-        misp_debug = True
-    else:
-        misp_debug = False
+    misp_verify = True
+    misp_debug = False
+    misp_url = None
+    misp_key = None
     try:
-        misp_connection = PyMISP(config['MISP_maltego.local.misp_url'], config['MISP_maltego.local.misp_key'], misp_verify, 'json', misp_debug)
+        if is_local_exec_mode():
+            misp_url = config['MISP_maltego.local.misp_url']
+            misp_key = config['MISP_maltego.local.misp_key']
+            if config['MISP_maltego.local.misp_verify'] in ['False', 'false', 0, 'no', 'No']:
+                misp_verify = False
+            if config['MISP_maltego.local.misp_debug'] in ['True', 'true', 1, 'yes', 'Yes']:
+                misp_debug = True
+        if is_remote_exec_mode():
+            try:
+                misp_url = parameters['mispurl'].value
+                misp_key = parameters['mispkey'].value
+            except AttributeError:
+                raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
+            misp_connection = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug)
     except Exception:
-        raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings")
+        if is_local_exec_mode():
+            raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
+        if is_remote_exec_mode():
+            raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your settings (MISP URL and API key), and ensure the MISP server is reachable from the internet.")
     return misp_connection
 
 

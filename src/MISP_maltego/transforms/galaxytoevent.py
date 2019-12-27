@@ -22,11 +22,12 @@ class GalaxyToEvents(Transform):
 
     # The transform input entity type.
     input_type = MISPGalaxy
+    remote = True
 
     def do_transform(self, request, response, config):
         response += check_update(config)
         maltego_misp_galaxy = request.entity
-        misp = get_misp_connection(config)
+        misp = get_misp_connection(config, request.parameters)
         if maltego_misp_galaxy.tag_name:
             tag_name = maltego_misp_galaxy.tag_name
         else:

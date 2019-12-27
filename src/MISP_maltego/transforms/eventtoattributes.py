@@ -37,7 +37,7 @@ class EventToTransform(Transform):
         self.config = config
         self.response += check_update(config)
         maltego_misp_event = request.entity
-        self.misp = get_misp_connection(config)
+        self.misp = get_misp_connection(config, request.parameters)
         event_id = maltego_misp_event.id
         search_result = self.misp.search(controller='events', eventid=event_id, with_attachments=False)
         if search_result:
@@ -88,6 +88,7 @@ class EventToTransform(Transform):
 class EventToAll(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Attributes, Objects, Tags, Galaxies'
+    remote = True
 
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
@@ -103,6 +104,7 @@ class EventToAll(EventToTransform):
 class EventToAttributes(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Attributes'
+    remote = True
 
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
@@ -115,6 +117,7 @@ class EventToAttributes(EventToTransform):
 class EventToTags(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Tags and Galaxies'
+    remote = True
 
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
@@ -128,6 +131,7 @@ class EventToTags(EventToTransform):
 class EventToGalaxies(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Galaxies'
+    remote = True
 
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
@@ -140,6 +144,7 @@ class EventToGalaxies(EventToTransform):
 class EventToObjects(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Objects'
+    remote = True
 
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
@@ -152,6 +157,7 @@ class EventToObjects(EventToTransform):
 class EventToRelations(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to related Events'
+    remote = True
 
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
@@ -165,11 +171,12 @@ class ObjectToAttributes(Transform):
     """"Expands an object to its attributes"""
     input_type = MISPObject
     description = 'Expands an Object to Attributes'
+    remote = True
 
     def do_transform(self, request, response, config):
         response += check_update(config)
         maltego_object = request.entity
-        misp = get_misp_connection(config)
+        misp = get_misp_connection(config, request.parameters)
         event_json = misp.get_event(maltego_object.event_id)
         for o in event_json['Event']['Object']:
             if o['uuid'] == maltego_object.uuid:
@@ -188,11 +195,12 @@ class ObjectToRelations(Transform):
     """Expands an object to the relations of the object"""
     input_type = MISPObject
     description = 'Expands an Object to Relations'
+    remote = True
 
     def do_transform(self, request, response, config):
         response += check_update(config)
         maltego_object = request.entity
-        misp = get_misp_connection(config)
+        misp = get_misp_connection(config, request.parameters)
         event_json = misp.get_event(maltego_object.event_id)
         for o in event_json['Event']['Object']:
             if o['uuid'] == maltego_object.uuid:
