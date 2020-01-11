@@ -27,13 +27,13 @@ FROM python:3
 RUN pip install PyMISP canari
 
 # keep this for normal install
-#RUN pip install MISP-maltego
+RUN pip install MISP-maltego
 
 # use this for install from your own local git repo
 # - first run "python setup.py sdist" to build the package
 # - change the version number below
-COPY dist/MISP_maltego-1.4.1.tar.gz /usr/local/src/
-RUN pip install /usr/local/src/MISP_maltego-1.4.1.tar.gz
+#COPY dist/MISP_maltego-1.4.1.tar.gz /usr/local/src/
+#RUN pip install /usr/local/src/MISP_maltego-1.4.1.tar.gz
 
 ENV LC_ALL='C.UTF-8'
 ENV LANG='C.UTF-8'
