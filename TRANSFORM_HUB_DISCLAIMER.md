@@ -11,6 +11,8 @@ We do keep standard HTTP logs for troubleshooting and anonymous statistics, alth
 
 **If so, feel free to use the MISP-Maltego transforms locally, where all the code runs on your own system. Installation instructions can be found [here](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md#installation).**
 
+You can also run this on your own iTDS server if you have the license. Have a look at the [Dockerfile](https://github.com/MISP/MISP-maltego/blob/master/Dockerfile) for more info.
+
 
 ## More info
 For more information please read Paterva's and Canari's documentation:

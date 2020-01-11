@@ -1,0 +1,98 @@
+---
+# Install MISP-maltego remote transform using ansible.
+#
+# DO NOT USE THIS UNLESS YOU REALLY KNOW YOU NEED THIS
+# - Most people usually probably want to use the local transforms 
+# - Others the 'ATT&CK - MISP' form the Transform Hub 
+#
+# First install your ubuntu system, 
+# Then run ansible-playbook -i inventory.txt plume.yaml
+#
+# Then configure your iTDS server 
+# - to create all the transforms and seeds and point to your docker.
+# - export the objects, icons and machines to a mtz and associate to the seed
+#   Paired Configurations:
+#   - in Maltego > Export Config, and select
+#   -- Entities > MISP
+#   -- Icons > MISP + intelligence icons
+#   -- Machines
+#   Save as "paired_config.mtz", upload on TDS
+
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  vars:
+    misp_maltego_version: 1.4.1  # FIXME change this !!!
+  tasks:
+  - name: install python3-pip
+    apt:
+      name: python3-pip
+      state: present
+  - name: install python libs
+    pip:
+      executable: pip3
+      name: ['canari', 'PyMISP']
+      state: latest
+  
+  # use the public pip package
+  - name: install MISP-maltego
+    pip:
+      executable: pip3
+      name: ['MISP-maltego']
+      state: latest
+    
+  # use local git repo instead, useful for development
+  # - name: bundle MISP-maltego
+  #   delegate_to: 127.0.0.1
+  #   command: 
+  #     cmd: python setup.py sdist
+  #     chdir: ../
+  #   become: no
+  # - name: copy MISP-maltego
+  #   copy:
+  #     src: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     dest: /usr/local/src/
+  # - name: install MISP-maltego
+  #   pip:
+  #     executable: pip3
+  #     name: file:///usr/local/src/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     state: forcereinstall
+  # - name: remove local MISP-maltego bundle
+  #   delegate_to: 127.0.0.1
+  #   file:
+  #     path: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     state: absent
+  #   become: no
+
+  - name: create nobody group - needed by plume
+    group:
+      name: nobody
+      state: present
+
+  - name: install canari plume
+    shell: 
+      cmd: canari install-plume --accept-defaults
+      creates: /var/plume/canari.conf
+    environment:
+      LC_ALL: 'C.UTF-8'
+      LANG: 'C.UTF-8'
+  # LATER maybe we want to run plume with TLS?
+
+  - name: load plume package
+    command: 
+      cmd: canari load-plume-package MISP_maltego --plume-dir /var/plume --accept-defaults
+      chdir: /var/plume
+      creates: /var/plume/MISP_maltego.conf
+    environment:
+      LC_ALL: 'C.UTF-8'
+      LANG: 'C.UTF-8'
+      PLUME_ROOT: '/var/plume'
+    notify: restart plume
+
+  # FIXME /etc/init.d/plume start at boot
+
+  handlers:
+    - name: restart plume
+      service:
+        name: plume
+        state: restarted
