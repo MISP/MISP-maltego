@@ -5,7 +5,12 @@ This user guide should help you through the installation of **MISP-Maltego**, an
 ## Remote Transform Installation
 This is coming soon. An entry will appear in the Transform Hub of Maltego, on which you can simply press the "install" button, and no local code needs to be installed. Your transforms will however go throught Paterva's servers and ours. See the [Transform Hub Disclaimer](https://github.com/MISP/MISP-maltego/blob/master/TRANSFORM_HUB_DISCLAIMER.md) for more information.
 
+**For MISP specific transforms this requires your MISP server to be reachable from the internet!
+ATT&CK transforms do not require a MISP server or API key to be configured.**
+
 ## Local Transform Installation
+If you trust nobody, or just want to connect to your local MISP server you can install everything as local transforms.
+
 These instructions have been tested on Ubuntu 18.04 LTS, but should be similar on other systems.
 1. Download and install [Maltego](https://www.paterva.com/web7/downloads.php)
 2. Install using pip: `sudo pip3 install MISP-maltego`
