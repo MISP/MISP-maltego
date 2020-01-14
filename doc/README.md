@@ -1,3 +1,4 @@
+
 # MISP-Maltego User Guide
 
 This user guide should help you through the installation of **MISP-Maltego**, and should guide you how to use it through a few use-cases. As this is a collaborative project, do not hesitate to propose changes, write other use-cases or raise [feature requests](https://github.com/MISP/MISP-maltego/issues) for missing features.
@@ -84,3 +85,6 @@ Apply the same steps for MITRE ATT&CK browsing:
 You might end up with such a graph:
 
 ![ATTACK](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/img/usecase5-attack.png)
+
+## Visualise common ATT&CK patterns
+Having access to a large amount of Threat information through MISP Threat Sharing communities gives you outstanding opportunities to aggregate this information and take the process of trying to understand how all this data fits together telling a broader story to the next level. We are transforming technical data or indicators of compromise (IOCs) into cyber threat intelligence. This is where the analytical challenge begins. [[read more](https://www.misp-project.org/2019/10/27/visualising_common_patterns_attack.html)]

@@ -1,3 +1,4 @@
+![logo](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/logo.png)
 # Quick start guide
 This is a [Maltego](https://www.paterva.com/web7/) [MISP](https://www.misp-project.org) integration tool allowing you to view (read-only) data from a MISP instance. 
 
@@ -18,9 +19,9 @@ The [User Guide](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md#
 
 
 ## Screenshot
-![Screenshot](https://github.com/MISP/MISP-maltego/blob/master/doc/screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/screenshot.png)
 
-![ATT&CK](https://github.com/MISP/MISP-maltego/blob/master/doc/attack.png)
+![ATT&CK](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/attack.png)
 
 
 ## License
@@ -29,5 +30,7 @@ This software is licensed under [GNU Affero General Public License version 3](ht
 * Copyright (C) 2018 Christophe Vandeplas
 
 Note: Before being rewritten from scratch this project was maintained by Emmanuel Bouillon. The code is available in the `v1` branch.
+
+The logo is CC-BY-SA and was designed by Françoise Penninckx
 
 The icons in the intelligence-icons folder are from [intelligence-icons](https://github.com/MISP/intelligence-icons) licensed CC-BY-SA - Françoise Penninckx, Brett Jordan
