@@ -13,7 +13,7 @@ import time
 
 # FIXME from galaxy 'to MISP Event' is confusing
 
-__version__ = '1.4.2'  # also update version in setup.py
+__version__ = '1.4.3'  # also update version in setup.py
 
 mapping_misp_to_maltego = {
     'AS': [AS],
@@ -189,7 +189,7 @@ def get_misp_connection(config=None, parameters=None):
                 misp_key = parameters['mispkey'].value
             except AttributeError:
                 raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
-            misp_connection = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug)
+        misp_connection = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug)
     except Exception:
         if is_local_exec_mode():
             raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
