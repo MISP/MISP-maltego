@@ -501,6 +501,12 @@ def galaxy_update_local_copy(force=False):
             force = True
 
     if force:
+        # FIXME create a lock to prevent two processes doing the same, and writing to the file at the same time
+        lockfile = local_path_uuid_mapping + '.lock'
+        from pathlib import Path
+        while os.path.exists(lockfile):
+            time.sleep(0.3)
+        Path(local_path_uuid_mapping + '.lock').touch()
         # download the latest zip of the public galaxy
         try:
             resp = requests.get(galaxy_archive_url)
@@ -542,7 +548,9 @@ def galaxy_update_local_copy(force=False):
                 pass
 
         with open(local_path_uuid_mapping, 'w') as f:
-            json.dump(cluster_uuids, f, sort_keys=True, indent=4)
+            json.dump(cluster_uuids, f)
+        # remove the lock
+        os.remove(lockfile)
 
 
 def galaxy_load_cluster_mapping():
