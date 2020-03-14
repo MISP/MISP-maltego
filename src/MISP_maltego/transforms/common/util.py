@@ -1,8 +1,9 @@
-from canari.maltego.entities import Hash, Domain, IPv4Address, URL, DNSName, AS, Website, NSRecord, PhoneNumber, EmailAddress, File, Person, Hashtag, Location, Company, Alias, Port, Twitter
+from canari.maltego.entities import Hash, URL, File, Person, Hashtag
 from canari.maltego.message import Label, LinkStyle, MaltegoException, Bookmark, LinkDirection, UIMessage, UIMessageType
 from canari.mode import is_local_exec_mode, is_remote_exec_mode
 from distutils.version import StrictVersion
-from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy, ThreatActor, Software, AttackTechnique
+from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject, MISPGalaxy
+from MISP_maltego.transforms.common.mappings import mapping_object_icon, mapping_misp_to_maltego, mapping_galaxy_icon, mapping_galaxy_type
 from pymisp import ExpandedPyMISP as PyMISP
 import json
 import os
@@ -14,108 +15,6 @@ import time
 # FIXME from galaxy 'to MISP Event' is confusing
 
 __version__ = '1.4.3'  # also update version in setup.py
-
-mapping_misp_to_maltego = {
-    'AS': [AS],
-    'domain': [Domain, NSRecord, Website, DNSName],
-    'email-dst': [EmailAddress],
-    'email-src': [EmailAddress],
-    'filename': [File],
-    'hostname': [Website, NSRecord, Domain, DNSName],
-    'ip': [IPv4Address],
-    'ip-dst': [IPv4Address],
-    'ip-src': [IPv4Address],
-    'md5': [Hash],
-    'phone-number': [PhoneNumber],
-    'sha1': [Hash],
-    'sha224': [Hash],
-    'sha256': [Hash],
-    'sha384': [Hash],
-    'sha512': [Hash],
-    'sha512/224': [Hash],
-    'sha512/256': [Hash],
-    'ssdeep': [Hash],
-    'impfuzzy': [Hash],
-    'uri': [URL],
-    'url': [URL],
-
-    'whois-registrant-email': [EmailAddress],
-    'country-of-residence': [Location],
-    'github-organisation': [Company],
-    'github-username': [Alias],
-    'imphash': [Hash],
-    'jabber-id': [Alias],
-    'passport-country': [Location],
-    'place-of-birth': [Location],
-    'port': [Port],
-    'target-email': [EmailAddress],
-    'target-location': [Location],
-    'target-org': [Company],
-    'target-user': [Alias],
-    'twitter-id': [Twitter],
-    # object mappings
-    'nameserver': [NSRecord],
-    # TODO add more object mappings
-    # custom types created internally for technical reasons
-    # 'rekey_value': [Unknown]
-}
-
-mapping_galaxy_icon = {
-    # "android": "malware",  # "android",
-    "btc": "ransomware",
-    "bug": "vulnerability",
-    # "cart-arrow-down": "malware",  #"tds",
-    "chain": "course_of_action",
-    "door-open": "backdoor",
-    "eye": "malware",
-    "gavel": "tool",
-    # "globe": "cert-eu-govsector",
-    # "industry": "sector",
-    # "internet-explorer": "exploit-kit",
-    "key": "stealer",
-    "map": "attack_pattern",
-    "optin-monster": "malware",
-    # "shield": "malpedia",
-    # "shield": "preventive-measure",
-    "sitemap": "botnet",
-    "usd": "malware",  # "banker",
-    # "user-secret": "mitre-intrusion-set",
-    "user-secret": "threat_actor",
-}
-
-mapping_galaxy_type = {
-    # 'amitt-misinformation-pattern': '',
-    'android': Software,
-    'backdoor': Software,
-    'banker': Software,
-    'botnet': Software,
-    # 'branded-vulnerability': '',
-    # 'cert-eu-govsector': '',
-    'cloud-security': AttackTechnique,
-    'exploit-kit': Software,
-    'financial-fraud': AttackTechnique,
-    'guidelines': AttackTechnique,
-    'malpedia': Software,
-    'microsoft-activity-group': ThreatActor,
-    'mitre-attack-pattern': AttackTechnique,
-    # 'mitre-course-of-action': '',
-    'mitre-intrusion-set': ThreatActor,
-    'mitre-malware': Software,
-    'mitre-tool': Software,
-    # 'preventive-measure': '',
-    'ransomware': Software,
-    'rat': Software,
-    # 'region': '',
-    # 'sector': '',
-    'social-dark-patterns': AttackTechnique,
-    'stealer': Software,
-    'surveillance-vendor': ThreatActor,
-    # 'target-information': '',
-    'tds': Software,
-    'threat-actor': ThreatActor,
-    'tool': Software
-}
-
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
@@ -278,11 +177,17 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
 
 
 def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOutput):
+    misp = get_misp_connection()
+    # find a nice icon for it
+    try:
+        icon_url = mapping_object_icon[o['name']]
+    except KeyError:
+        # it's not in our mapping, just ignore and leave the default icon
+        icon_url = None
     # Generate a human readable display-name:
     # - find the first RequiredOneOf that exists
     # - if none, use the first RequiredField
     # LATER further finetune the human readable version of this object
-    misp = get_misp_connection()
     o_template = misp.get_object_template(o['template_uuid'])
     human_readable = None
     try:
@@ -295,7 +200,7 @@ def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOut
                     break
             for a in o['Attribute']:
                 if a['type'] == required_a_type:
-                    human_readable = '{}: {}'.format(o['name'], a['value'])
+                    human_readable = '{}:\n{}'.format(o['name'], a['value'])
                     found = True
                     break
     except Exception:
@@ -313,10 +218,9 @@ def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOut
                     if a['type'] == required_a_type:
                         parts.append(a['value'])
                         break
-            human_readable = '{}: {}'.format(o['name'], '|'.join(parts))
+            human_readable = '{}:\n{}'.format(o['name'], '|'.join(parts))
         except Exception:
             human_readable = o['name']
-            pass
     return MISPObject(
         human_readable,
         uuid=o['uuid'],
@@ -324,6 +228,7 @@ def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOut
         meta_category=o.get('meta_category'),
         description=o.get('description'),
         comment=o.get('comment'),
+        icon_url=icon_url,
         link_label=link_label,
         link_direction=link_direction,
         bookmark=Bookmark.Green
@@ -454,9 +359,8 @@ def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.Inp
     try:
         icon_url = mapping_galaxy_icon[galaxy_cluster['icon']]
     except KeyError:
+        # it's not in our mapping, just ignore and leave the default icon
         icon_url = None
-        # it's not in our mapping, just ignore and leave the default Galaxy icon
-        pass
 
     # create the right sub-galaxy: ThreatActor, Software, AttackTechnique, ... or MISPGalaxy
     try:
