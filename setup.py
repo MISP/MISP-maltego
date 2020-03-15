@@ -2,6 +2,9 @@
 
 from setuptools import setup, find_packages
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name='MISP_maltego',
     author='Christophe Vandeplas',
@@ -11,6 +14,7 @@ setup(
     maintainer='Christophe Vandeplas',
     url='https://github.com/MISP/MISP-maltego',
     description='Maltego transform for interacting with a MISP Threat Sharing community and with MITRE ATT&CK.',
+    long_description=long_description,
     license='AGPLv3',
     packages=find_packages('src'),
     package_dir={'': 'src'},
