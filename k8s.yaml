@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: misp-maltego
+spec:
+  selector:
+    matchLabels:
+      app: misp-maltego
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: misp-maltego
+    spec:
+      containers:
+        - name: misp-maltego
+          image: cvandeplas/misp-maltego
+          imagePullPolicy: Always
+          ports:
+            - name: listen-port
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 4Gi
+            limits:
+              cpu: 1
+              memory: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: misp-maltego
+  annotations:
+    dev.okteto.com/auto-ingress: "true"
+spec:
+  type: ClusterIP  
+  ports:
+  - name: "misp-maltego"
+    port: 8080
+  selector:
+    app: misp-maltego
