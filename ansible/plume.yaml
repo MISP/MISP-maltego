@@ -3,7 +3,7 @@
 #
 # DO NOT USE THIS UNLESS YOU REALLY KNOW YOU NEED THIS
 # - Most people usually probably want to use the local transforms 
-# - Others the 'ATT&CK - MISP' form the Transform Hub 
+# - Others the 'ATT&CK - MISP' from the Transform Hub 
 #
 # First install your ubuntu system, 
 # Then run ansible-playbook -i inventory.txt plume.yaml
@@ -19,51 +19,81 @@
 #   Save as "paired_config.mtz", upload on TDS
 
 - hosts: all
-  remote_user: ubuntu
   become: yes
   vars:
-    misp_maltego_version: 1.4.1  # FIXME change this !!!
+    misp_maltego_version: 1.4.4  # TODO change this !!!
+    host_locale: en_US.UTF-8
+    host_locale_dict: {
+      LANG: "{{ host_locale }}",
+      LC_COLLATE: "{{ host_locale }}",
+      LC_CTYPE: "{{ host_locale }}",
+      LC_MESSAGES: "{{ host_locale }}",
+      LC_MONETARY: "{{ host_locale }}",
+      LC_NUMERIC: "{{ host_locale }}",
+      LC_TIME: "{{ host_locale }}",
+      LC_ALL: "{{ host_locale }}",
+    }
+
   tasks:
   - name: install python3-pip
-    apt:
+    package:
       name: python3-pip
       state: present
   - name: install python libs
     pip:
-      executable: pip3
-      name: ['canari', 'PyMISP']
+      executable: /usr/bin/pip3
+      name: ['canari', 'pymisp']
       state: latest
   
-  # use the public pip package
-  - name: install MISP-maltego
-    pip:
-      executable: pip3
-      name: ['MISP-maltego']
-      state: latest
-    
-  # use local git repo instead, useful for development
-  # - name: bundle MISP-maltego
-  #   delegate_to: 127.0.0.1
-  #   command: 
-  #     cmd: python setup.py sdist
-  #     chdir: ../
-  #   become: no
-  # - name: copy MISP-maltego
-  #   copy:
-  #     src: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
-  #     dest: /usr/local/src/
-  # - name: install MISP-maltego
-  #   pip:
-  #     executable: pip3
-  #     name: file:///usr/local/src/MISP_maltego-{{misp_maltego_version}}.tar.gz
-  #     state: forcereinstall
-  # - name: remove local MISP-maltego bundle
-  #   delegate_to: 127.0.0.1
-  #   file:
-  #     path: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
-  #     state: absent
-  #   become: no
+  # NGINX reverse proxy
+  # ######
+  - name: install nginx
+    package:
+      name: nginx
+      state: present
 
+  - name: letsencrypt certbot ppa
+    apt_repository:
+      repo: ppa:certbot/certbot
+
+  - name: letsencrypt certbot install
+    package:
+      name: ['certbot', 'python-certbot-nginx']
+      state: present
+
+  # FIXME generate the cert automagically, while answering the questions
+  # creates: /etc/letsencrypt/live/misp-maltego.misp-project.org/privkey.pem
+  # Requires input:
+  # - email address
+  # - agree terms
+  # - no sharing email with EFF
+
+  - name: nginx disable default config
+    file:
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+
+  - name: nginx copy config
+    copy:
+      src: nginx.conf
+      dest: /etc/nginx/sites-available/plume
+    notify: restart nginx
+
+  - name: nginx enable plume config
+    file:
+      src: /etc/nginx/sites-available/plume
+      dest: /etc/nginx/sites-enabled/plume
+      state: link
+    notify: restart nginx
+
+  - name: letsencrypt auto-renew
+    cron:
+      name: "letsencrypt auto-renew SSL certificate"
+      special_time: daily
+      job: "/usr/sbin/certbot -q renew"
+
+  # PLUME
+  #######
   - name: create nobody group - needed by plume
     group:
       name: nobody
@@ -76,7 +106,51 @@
     environment:
       LC_ALL: 'C.UTF-8'
       LANG: 'C.UTF-8'
-  # LATER maybe we want to run plume with TLS?
+  
+  - name: Start service plume at boot
+    file:
+      src: /etc/init.d/plume
+      dest: /etc/rc{{item}}.d/S20plume
+      state: link
+    with_items:
+      - 3
+      - 4
+      - 5
+  # LATER migrate to systemd service
+
+
+  # use the public pip package
+  - name: install MISP-maltego
+    pip:
+      executable: pip3
+      name: ['MISP-maltego']
+      state: latest
+    notify: restart plume
+
+  # use local git repo instead, useful for development
+  # - name: bundle MISP-maltego
+  #   delegate_to: 127.0.0.1
+  #   command: 
+  #     cmd: python3 setup.py sdist
+  #     chdir: ../
+  #   become: no
+  # - name: copy MISP-maltego
+  #   copy:
+  #     src: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     dest: /usr/local/src/
+  # - name: install MISP-maltego
+  #   pip:
+  #     executable: /usr/bin/pip3
+  #     name: file:///usr/local/src/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     state: forcereinstall
+  #   environment: "{{host_locale_dict}}"
+  #   notify: restart plume
+  # - name: remove local MISP-maltego bundle
+  #   delegate_to: 127.0.0.1
+  #   file:
+  #     path: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     state: absent
+  #   become: no
 
   - name: load plume package
     command: 
@@ -89,10 +163,65 @@
       PLUME_ROOT: '/var/plume'
     notify: restart plume
 
-  # FIXME /etc/init.d/plume start at boot
+  - name: Start service plume, if not started
+    service:
+      name: plume
+      state: started
+
+  # FIREWALLING
+  #############
+  - name: firewall logging
+    ufw:
+      logging: 'low'
+
+  - name: firewall inbound rate limited
+    ufw:
+      rule: limit
+      port: '2245'  # ssh
+      proto: tcp
+      direction: in
+
+  - name: firewall inbound
+    ufw:
+      rule: allow
+      port: "{{item}}"
+      proto: tcp
+      direction: in
+    loop:
+      - '80'     # nginx 
+      - '443'    # nginx plume
+      - '25324'  # monitoring
+
+  - name: firewall outbound
+    ufw: 
+      rule: allow
+      port: "{{ item.port }}"
+      proto: "{{ item.proto }}"
+      direction: out
+    loop:
+      - { port: '53', proto: 'udp'}
+      - { port: '123', proto: 'udp'}
+      - { port: '53', proto: 'tcp'}
+      - { port: '80', proto: 'tcp'}
+      - { port: '443', proto: 'tcp'}
+      - { port: '32526', proto: 'tcp'}  # waagent
+
+  - name: firewall default rule
+    ufw:
+      state: enabled
+      default: deny
+      direction: '{{ item }}'
+    loop:
+      - incoming
+      - outgoing
 
   handlers:
     - name: restart plume
       service:
         name: plume
+        state: restarted
+
+    - name: restart nginx
+      service:
+        name: nginx
         state: restarted

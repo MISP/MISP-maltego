@@ -10,3 +10,5 @@
 # Locally genenerated mtz
 /*.mtz
 
+
+ansible/inventory.txt
