@@ -14,7 +14,7 @@ import time
 
 # FIXME from galaxy 'to MISP Event' is confusing
 
-__version__ = '1.4.3'  # also update version in setup.py
+__version__ = '1.4.4'  # also update version in setup.py
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
@@ -405,7 +405,7 @@ def galaxy_update_local_copy(force=False):
             force = True
 
     if force:
-        # FIXME create a lock to prevent two processes doing the same, and writing to the file at the same time
+        # create a lock to prevent two processes doing the same, and writing to the file at the same time
         lockfile = local_path_uuid_mapping + '.lock'
         from pathlib import Path
         while os.path.exists(lockfile):
