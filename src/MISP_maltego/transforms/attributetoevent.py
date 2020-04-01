@@ -103,6 +103,15 @@ class AttributeToEvent(Transform):
                 return response
             else:
                 return response
+        # from Hashtag
+        elif 'properties.temp' in request.entity.fields:
+            tag_name = get_entity_property(request.entity, 'Temp')
+            if not tag_name:
+                tag_name = request.entity.value
+            events_json = misp.search(controller='events', tags=tag_name, with_attachments=False)
+            for e in events_json:
+                response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
+            return response
         # standard Entities (normal attributes)
         else:
             events_json = misp.search(controller='events', value=request.entity.value, with_attachments=False)
