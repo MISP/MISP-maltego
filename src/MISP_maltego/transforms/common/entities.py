@@ -32,6 +32,8 @@ class MISPEvent(Entity):
     # threat_level = EnumEntityField('type.enum', choices=['Undefined', 'Low', 'Medium', 'High'], display_name='Threat Level')
     # analysis = EnumEntityField('type.enum', choices=['Initial', 'Ongoing', 'Completed'])
     # org = StringEntityField('type.str', display_name='Organisation')
+    count_attributes = IntegerEntityField('count_attributes', display_name="# attributes", matching_rule=MatchingRule.Loose)
+    count_objects = IntegerEntityField('count_objects', display_name="# objects", matching_rule=MatchingRule.Loose)
 
 
 class MISPObject(Entity):
