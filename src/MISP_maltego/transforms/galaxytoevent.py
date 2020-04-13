@@ -1,5 +1,4 @@
 from canari.maltego.transform import Transform
-# from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy, ThreatActor, Software, AttackTechnique
 from MISP_maltego.transforms.common.util import check_update, get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
 from canari.maltego.message import UIMessageType, UIMessage, LinkDirection
@@ -16,7 +15,6 @@ __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
 
 
-# @EnableDebugWindow
 class GalaxyToEvents(Transform):
     """Expands a Galaxy to multiple MISP Events."""
 
@@ -26,38 +24,35 @@ class GalaxyToEvents(Transform):
 
     def do_transform(self, request, response, config):
         response += check_update(config)
-        maltego_misp_galaxy = request.entity
         misp = get_misp_connection(config, request.parameters)
-        if maltego_misp_galaxy.tag_name:
-            tag_name = maltego_misp_galaxy.tag_name
+        if request.entity.tag_name:
+            tag_name = request.entity.tag_name
         else:
-            tag_name = maltego_misp_galaxy.value
+            tag_name = request.entity.value
         events_json = misp.search(controller='events', tags=tag_name, with_attachments=False)
         for e in events_json:
             response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_direction=LinkDirection.OutputToInput)
         return response
 
 
-# @EnableDebugWindow
 class GalaxyToTransform(Transform):
     input_type = None
 
     def do_transform(self, request, response, config, type_filter=MISPGalaxy):
         response += check_update(config)
-        maltego_misp_galaxy = request.entity
 
         current_cluster = None
-        if maltego_misp_galaxy.uuid:
-            current_cluster = get_galaxy_cluster(uuid=maltego_misp_galaxy.uuid)
-        elif maltego_misp_galaxy.tag_name:
-            current_cluster = get_galaxy_cluster(tag=maltego_misp_galaxy.tag_name)
-        elif maltego_misp_galaxy.name:
-            current_cluster = get_galaxy_cluster(tag=maltego_misp_galaxy.name)
+        if request.entity.uuid:
+            current_cluster = get_galaxy_cluster(uuid=request.entity.uuid)
+        elif request.entity.tag_name:
+            current_cluster = get_galaxy_cluster(tag=request.entity.tag_name)
+        elif request.entity.name:
+            current_cluster = get_galaxy_cluster(tag=request.entity.name)
 
-        if not current_cluster and maltego_misp_galaxy.name != '-':
+        if not current_cluster and request.entity.name != '-':
             # maybe the user is searching for a cluster based on a substring.
             # Search in the list for those that match and return galaxy entities
-            potential_clusters = search_galaxy_cluster(maltego_misp_galaxy.name)
+            potential_clusters = search_galaxy_cluster(request.entity.name)
             # TODO check if duplicates are possible
             if potential_clusters:
                 for potential_cluster in potential_clusters:

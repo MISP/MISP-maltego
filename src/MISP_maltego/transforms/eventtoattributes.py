@@ -1,6 +1,5 @@
 from canari.maltego.entities import Hashtag
 from canari.maltego.transform import Transform
-# from canari.framework import EnableDebugWindow
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
 from MISP_maltego.transforms.common.util import check_update, get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, object_to_relations, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
@@ -84,7 +83,6 @@ class EventToTransform(Transform):
             self.response += event_to_entity(e, link_style=LinkStyle.DashDot)
 
 
-# @EnableDebugWindow
 class EventToAll(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Attributes, Objects, Tags, Galaxies'
@@ -100,7 +98,6 @@ class EventToAll(EventToTransform):
         return self.response
 
 
-# @EnableDebugWindow
 class EventToAttributes(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Attributes'
@@ -113,7 +110,6 @@ class EventToAttributes(EventToTransform):
         return self.response
 
 
-# @EnableDebugWindow
 class EventToTags(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Tags and Galaxies'
@@ -127,7 +123,6 @@ class EventToTags(EventToTransform):
         return self.response
 
 
-# @EnableDebugWindow
 class EventToGalaxies(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Galaxies'
@@ -140,7 +135,6 @@ class EventToGalaxies(EventToTransform):
         return self.response
 
 
-# @EnableDebugWindow
 class EventToObjects(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to Objects'
@@ -153,7 +147,6 @@ class EventToObjects(EventToTransform):
         return self.response
 
 
-# @EnableDebugWindow
 class EventToRelations(EventToTransform):
     input_type = MISPEvent
     description = 'Expands an Event to related Events'
@@ -166,7 +159,6 @@ class EventToRelations(EventToTransform):
         return self.response
 
 
-# @EnableDebugWindow
 class ObjectToAttributes(Transform):
     """"Expands an object to its attributes"""
     input_type = MISPObject
@@ -190,7 +182,6 @@ class ObjectToAttributes(Transform):
         return response
 
 
-# @EnableDebugWindow
 class ObjectToRelations(Transform):
     """Expands an object to the relations of the object"""
     input_type = MISPObject
