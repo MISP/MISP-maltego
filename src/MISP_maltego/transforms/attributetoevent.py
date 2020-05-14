@@ -84,10 +84,17 @@ class SearchInMISP(Transform):
         events_json = misp.search(controller='events', value=request.entity.value, with_attachments=False)
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
         for e in events_json:
+            # find the value as attribute
             attr = get_attribute_in_event(e, request.entity.value, substring=True)
             if attr:
                 for item in attribute_to_entity(attr, only_self=True):
                     response += item
+            # find the value as object, and return the object
+            if 'Object' in e['Event']:
+                for o in e['Event']['Object']:
+                    if get_attribute_in_object(o, attribute_value=request.entity.value, substring=True).get('value'):
+                        response += object_to_entity(o, link_label=link_label)
+
         return response
 
 # placeholder for https://github.com/MISP/MISP-maltego/issues/11

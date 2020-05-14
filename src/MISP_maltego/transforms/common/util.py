@@ -278,7 +278,7 @@ def get_object_in_event(uuid, e):
             return o
 
 
-def get_attribute_in_object(o, attribute_type=False, attribute_value=False, drop=False):
+def get_attribute_in_object(o, attribute_type=False, attribute_value=False, drop=False, substring=False):
     '''Gets the first attribute of a specific type within an object'''
     found_attribute = {'value': ''}
     for i, a in enumerate(o['Attribute']):
@@ -291,12 +291,53 @@ def get_attribute_in_object(o, attribute_type=False, attribute_value=False, drop
             found_attribute = a.copy()
             if drop:    # drop the attribute from the object
                 o['Attribute'].pop(i)
+            break
         if '|' in a['type'] or a['type'] == 'malware-sample':
             if attribute_value in a['value'].split('|'):
                 found_attribute = a.copy()
                 if drop:    # drop the attribute from the object
                     o['Attribute'].pop(i)
+                break
+        # TODO implement substring matching
+        if substring:
+            keyword = attribute_value.strip('%')
+            if attribute_value.startswith('%') and attribute_value.endswith('%'):
+                if attribute_value in a['value']:
+                    found_attribute = a.copy()
+                    if drop:    # drop the attribute from the object
+                        o['Attribute'].pop(i)
+                    break
+                if '|' in a['type'] or a['type'] == 'malware-sample':
+                    val1, val2 = a['value'].split('|')
+                    if attribute_value in val1 or attribute_value in val2:
+                        found_attribute = a.copy()
+                        if drop:    # drop the attribute from the object
+                            o['Attribute'].pop(i)
+                        break
+            elif attribute_value.startswith('%'):
+                if a['value'].endswith(keyword):
+                    found_attribute = a.copy()
+                    if drop:    # drop the attribute from the object
+                        o['Attribute'].pop(i)
+                    break
+                if '|' in a['type'] or a['type'] == 'malware-sample':
+                    val1, val2 = a['value'].split('|')
+                    if val1.endswith(keyword) or val2.endswith(keyword):
+                        found_attribute = a.copy()
+                        if drop:    # drop the attribute from the object
+                            o['Attribute'].pop(i)
+                        break
 
+            elif attribute_value.endswith('%'):
+                if a['value'].startswith(keyword):
+                    return a
+                if '|' in a['type'] or a['type'] == 'malware-sample':
+                    val1, val2 = a['value'].split('|')
+                    if val1.startswith(keyword) or val2.startswith(keyword):
+                        found_attribute = a.copy()
+                        if drop:    # drop the attribute from the object
+                            o['Attribute'].pop(i)
+                        break
     return found_attribute
 
 
