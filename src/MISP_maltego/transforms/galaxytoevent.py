@@ -41,25 +41,20 @@ class GalaxyToTransform(Transform):
     def do_transform(self, request, response, config, type_filter=MISPGalaxy):
         response += check_update(config)
 
-        current_cluster = None
-        if request.entity.uuid:
-            current_cluster = get_galaxy_cluster(uuid=request.entity.uuid)
-        elif request.entity.tag_name:
-            current_cluster = get_galaxy_cluster(tag=request.entity.tag_name)
-        elif request.entity.name:
-            current_cluster = get_galaxy_cluster(tag=request.entity.name)
+        current_cluster = get_galaxy_cluster(request_entity=request.entity)
 
+        # legacy - replaced by Search in MISP
         if not current_cluster and request.entity.name != '-':
             # maybe the user is searching for a cluster based on a substring.
             # Search in the list for those that match and return galaxy entities
             potential_clusters = search_galaxy_cluster(request.entity.name)
-            # TODO check if duplicates are possible
             if potential_clusters:
                 for potential_cluster in potential_clusters:
                     new_entity = galaxycluster_to_entity(potential_cluster, link_label='Search result')
                     if isinstance(new_entity, type_filter):
                         response += new_entity
                 return response
+        # end of legacy
 
         if not current_cluster:
             response += UIMessage("Galaxy Cluster UUID not in local mapping. Please update local cache; non-public UUID are not supported yet.", type=UIMessageType.Inform)
@@ -67,7 +62,7 @@ class GalaxyToTransform(Transform):
         c = current_cluster
 
         # update existing object
-        galaxy_cluster = get_galaxy_cluster(c['uuid'])
+        galaxy_cluster = get_galaxy_cluster(uuid=c['uuid'])
         icon_url = None
         if 'icon' in galaxy_cluster:  # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
             try:
@@ -92,7 +87,7 @@ class GalaxyToTransform(Transform):
         # find related objects
         if 'related' in current_cluster:
             for related in current_cluster['related']:
-                related_cluster = get_galaxy_cluster(related['dest-uuid'])
+                related_cluster = get_galaxy_cluster(uuid=related['dest-uuid'])
                 if related_cluster:
                     new_entity = galaxycluster_to_entity(related_cluster, link_label=related['type'])
                     if isinstance(new_entity, type_filter):

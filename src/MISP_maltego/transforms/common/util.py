@@ -300,13 +300,37 @@ def get_attribute_in_object(o, attribute_type=False, attribute_value=False, drop
     return found_attribute
 
 
-def get_attribute_in_event(e, attribute_value):
+def get_attribute_in_event(e, attribute_value, substring=False):
     for a in e['Event']["Attribute"]:
         if a['value'] == attribute_value:
             return a
         if '|' in a['type'] or a['type'] == 'malware-sample':
             if attribute_value in a['value'].split('|'):
                 return a
+        if substring:
+            keyword = attribute_value.strip('%')
+            if attribute_value.startswith('%') and attribute_value.endswith('%'):
+                if attribute_value in a['value']:
+                    return a
+                if '|' in a['type'] or a['type'] == 'malware-sample':
+                    val1, val2 = a['value'].split('|')
+                    if attribute_value in val1 or attribute_value in val2:
+                        return a
+            elif attribute_value.startswith('%'):
+                if a['value'].endswith(keyword):
+                    return a
+                if '|' in a['type'] or a['type'] == 'malware-sample':
+                    val1, val2 = a['value'].split('|')
+                    if val1.endswith(keyword) or val2.endswith(keyword):
+                        return a
+
+            elif attribute_value.endswith('%'):
+                if a['value'].startswith(keyword):
+                    return a
+                if '|' in a['type'] or a['type'] == 'malware-sample':
+                    val1, val2 = a['value'].split('|')
+                    if val1.startswith(keyword) or val2.startswith(keyword):
+                        return a
 
     return None
 
@@ -329,7 +353,7 @@ def tag_matches_note_prefix(tag):
     return False
 
 
-def event_to_entity(e, link_style=LinkStyle.Normal, link_direction=LinkDirection.InputToOutput):
+def event_to_entity(e, link_style=LinkStyle.Normal, link_label=None, link_direction=LinkDirection.InputToOutput):
     tags = []
     if 'Tag' in e['Event']:
         for t in e['Event']['Tag']:
@@ -340,6 +364,7 @@ def event_to_entity(e, link_style=LinkStyle.Normal, link_direction=LinkDirection
         uuid=e['Event']['uuid'],
         info=e['Event']['info'],
         link_style=link_style,
+        link_label=link_label,
         link_direction=link_direction,
         count_attributes=len(e['Event'].get('Attribute')),
         count_objects=len(e['Event'].get('Object')),
@@ -356,7 +381,7 @@ def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.Inp
     else:
         synonyms = ''
 
-    galaxy_cluster = get_galaxy_cluster(c['uuid'])
+    galaxy_cluster = get_galaxy_cluster(uuid=c['uuid'])
     # map the 'icon' name from the cluster to the icon filename of the intelligence-icons repository
     try:
         icon_url = mapping_galaxy_icon[galaxy_cluster['icon']]
@@ -466,7 +491,7 @@ def galaxy_load_cluster_mapping():
     return cluster_uuids
 
 
-def get_galaxy_cluster(uuid=None, tag=None):
+def get_galaxy_cluster(uuid=None, tag=None, request_entity=None):
     global galaxy_cluster_uuids
     if not galaxy_cluster_uuids:
         galaxy_cluster_uuids = galaxy_load_cluster_mapping()
@@ -477,6 +502,13 @@ def get_galaxy_cluster(uuid=None, tag=None):
         for item in galaxy_cluster_uuids.values():
             if item['tag_name'] == tag:
                 return item
+    if request_entity:
+        if request_entity.uuid:
+            return get_galaxy_cluster(uuid=request_entity.uuid)
+        elif request_entity.tag_name:
+            return get_galaxy_cluster(tag=request_entity.tag_name)
+        elif request_entity.name:
+            return get_galaxy_cluster(tag=request_entity.name)
 
 
 def search_galaxy_cluster(keyword):
@@ -484,14 +516,42 @@ def search_galaxy_cluster(keyword):
     global galaxy_cluster_uuids
     if not galaxy_cluster_uuids:
         galaxy_cluster_uuids = galaxy_load_cluster_mapping()
-    for item in galaxy_cluster_uuids.values():
-        if keyword in item['tag_name'].lower():
-            yield item
-        else:
-            if 'meta' in item and 'synonyms' in item['meta']:
-                for synonym in item['meta']['synonyms']:
-                    if keyword in synonym.lower():
-                        yield item
+
+    # % only at start
+    if keyword.startswith('%') and not keyword.endswith('%'):
+        keyword = keyword.strip('%')
+        for item in galaxy_cluster_uuids.values():
+            if item['value'].lower().endswith(keyword):
+                yield item
+            else:
+                if 'meta' in item and 'synonyms' in item['meta']:
+                    for synonym in item['meta']['synonyms']:
+                        if synonym.lower().endswith(keyword):
+                            yield item
+
+    # % only at end
+    elif keyword.endswith('%') and not keyword.startswith('%'):
+        keyword = keyword.strip('%')
+        for item in galaxy_cluster_uuids.values():
+            if item['value'].lower().startswith(keyword):
+                yield item
+            else:
+                if 'meta' in item and 'synonyms' in item['meta']:
+                    for synonym in item['meta']['synonyms']:
+                        if synonym.lower().startswith(keyword):
+                            yield item
+
+    # search substring assuming % at start and end
+    else:
+        keyword = keyword.strip('%')
+        for item in galaxy_cluster_uuids.values():
+            if keyword in item['value'].lower():
+                yield item
+            else:
+                if 'meta' in item and 'synonyms' in item['meta']:
+                    for synonym in item['meta']['synonyms']:
+                        if keyword in synonym.lower():
+                            yield item
 
 
 def get_galaxies_relating(uuid):
