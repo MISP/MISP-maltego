@@ -1,7 +1,7 @@
 from canari.maltego.entities import Unknown, Hashtag
 from canari.maltego.transform import Transform
 from MISP_maltego.transforms.common.entities import MISPGalaxy
-from MISP_maltego.transforms.common.util import check_update, get_misp_connection, event_to_entity, object_to_entity, get_attribute_in_event, get_attribute_in_object, attribute_to_entity, get_entity_property, search_galaxy_cluster, galaxycluster_to_entity, tag_matches_note_prefix
+from MISP_maltego.transforms.common.util import check_update, MISPConnection, event_to_entity, get_attribute_in_event, get_attribute_in_object, attribute_to_entity, get_entity_property, search_galaxy_cluster, galaxycluster_to_entity
 from canari.maltego.message import LinkDirection, Bookmark
 
 __author__ = 'Christophe Vandeplas'
@@ -26,20 +26,20 @@ class SearchInMISP(Transform):
         link_label = 'Search result'
 
         if 'properties.mispevent' in request.entity.fields:
-            misp = get_misp_connection(config, request.parameters)
+            conn = MISPConnection(config, request.parameters)
             # if event_id
             try:
                 if request.entity.value == '0':
                     return response
                 eventid = int(request.entity.value)
-                events_json = misp.search(controller='events', eventid=eventid, with_attachments=False)
+                events_json = conn.misp.search(controller='events', eventid=eventid, with_attachments=False)
                 for e in events_json:
                     response += event_to_entity(e, link_label=link_label, link_direction=LinkDirection.OutputToInput)
                 return response
             except ValueError:
                 pass
             # if event_info string as value
-            events_json = misp.search(controller='events', eventinfo=request.entity.value, with_attachments=False)
+            events_json = conn.misp.search(controller='events', eventinfo=request.entity.value, with_attachments=False)
             for e in events_json:
                 response += event_to_entity(e, link_label=link_label, link_direction=LinkDirection.OutputToInput)
             return response
@@ -68,8 +68,8 @@ class SearchInMISP(Transform):
                 keyword = get_entity_property(request.entity, 'Temp')
                 if not keyword:
                     keyword = request.entity.value
-                misp = get_misp_connection(config, request.parameters)
-                result = misp.direct_call('tags/search', {'name': keyword})
+                conn = MISPConnection(config, request.parameters)
+                result = conn.misp.direct_call('tags/search', {'name': keyword})
                 for t in result:
                     # skip misp-galaxies as we have processed them earlier on
                     if t['Tag']['name'].startswith('misp-galaxy'):
@@ -80,8 +80,8 @@ class SearchInMISP(Transform):
             return response
 
         # for all other normal entities
-        misp = get_misp_connection(config, request.parameters)
-        events_json = misp.search(controller='events', value=request.entity.value, with_attachments=False)
+        conn = MISPConnection(config, request.parameters)
+        events_json = conn.misp.search(controller='events', value=request.entity.value, with_attachments=False)
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
         for e in events_json:
             # find the value as attribute
@@ -93,7 +93,7 @@ class SearchInMISP(Transform):
             if 'Object' in e['Event']:
                 for o in e['Event']['Object']:
                     if get_attribute_in_object(o, attribute_value=request.entity.value, substring=True).get('value'):
-                        response += object_to_entity(o, link_label=link_label)
+                        response += conn.object_to_entity(o, link_label=link_label)
 
         return response
 
@@ -137,20 +137,20 @@ class AttributeToEvent(Transform):
             # placeholder for https://github.com/MISP/MISP-maltego/issues/11
             pass
 
-        misp = get_misp_connection(config, request.parameters)
+        conn = MISPConnection(config, request.parameters)
         # from Galaxy
         if 'properties.mispgalaxy' in request.entity.fields:
             tag_name = get_entity_property(request.entity, 'tag_name')
             if not tag_name:
                 tag_name = request.entity.value
-            events_json = misp.search(controller='events', tags=tag_name, with_attachments=False)
+            events_json = conn.misp.search(controller='events', tags=tag_name, with_attachments=False)
             for e in events_json:
                 response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
             return response
         # from Object
         elif 'properties.mispobject' in request.entity.fields:
             if request.entity.fields.get('event_id'):
-                events_json = misp.search(controller='events', eventid=request.entity.fields.get('event_id').value, with_attachments=False)
+                events_json = conn.misp.search(controller='events', eventid=request.entity.fields.get('event_id').value, with_attachments=False)
                 for e in events_json:
                     response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
                 return response
@@ -161,13 +161,13 @@ class AttributeToEvent(Transform):
             tag_name = get_entity_property(request.entity, 'Temp')
             if not tag_name:
                 tag_name = request.entity.value
-            events_json = misp.search(controller='events', tags=tag_name, with_attachments=False)
+            events_json = conn.misp.search(controller='events', tags=tag_name, with_attachments=False)
             for e in events_json:
                 response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
             return response
         # standard Entities (normal attributes)
         else:
-            events_json = misp.search(controller='events', value=request.entity.value, with_attachments=False)
+            events_json = conn.misp.search(controller='events', value=request.entity.value, with_attachments=False)
 
         # return the MISPEvent or MISPObject of the attribute
         for e in events_json:
@@ -179,6 +179,6 @@ class AttributeToEvent(Transform):
             if 'Object' in e['Event']:
                 for o in e['Event']['Object']:
                     if get_attribute_in_object(o, attribute_value=request.entity.value).get('value'):
-                        response += object_to_entity(o, link_direction=LinkDirection.OutputToInput)
+                        response += conn.object_to_entity(o, link_direction=LinkDirection.OutputToInput)
 
         return response

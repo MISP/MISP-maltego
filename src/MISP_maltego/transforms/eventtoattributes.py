@@ -1,7 +1,7 @@
 from canari.maltego.entities import Hashtag
 from canari.maltego.transform import Transform
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPObject
-from MISP_maltego.transforms.common.util import check_update, get_misp_connection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_entity, object_to_attributes, object_to_relations, tag_matches_note_prefix
+from MISP_maltego.transforms.common.util import check_update, MISPConnection, attribute_to_entity, event_to_entity, galaxycluster_to_entity, object_to_attributes, tag_matches_note_prefix
 from canari.maltego.message import LinkStyle
 
 
@@ -15,7 +15,7 @@ __maintainer__ = 'Christophe Vandeplas'
 __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
 
-# FIXME have a more human readable version of the MISP event value in the graph. change entity + event_to_entity + do_transform
+# TODO have a more human readable version of the MISP event value in the graph. change entity + event_to_entity + do_transform
 
 
 class EventToTransform(Transform):
@@ -26,7 +26,7 @@ class EventToTransform(Transform):
         self.request = None
         self.response = None
         self.config = None
-        self.misp = None
+        self.conn = None
         self.event_json = None
         self.event_tags = None
 
@@ -36,9 +36,9 @@ class EventToTransform(Transform):
         self.config = config
         self.response += check_update(config)
         maltego_misp_event = request.entity
-        self.misp = get_misp_connection(config, request.parameters)
+        self.conn = MISPConnection(config, request.parameters)
         event_id = maltego_misp_event.id
-        search_result = self.misp.search(controller='events', eventid=event_id, with_attachments=False)
+        search_result = self.conn.misp.search(controller='events', eventid=event_id, with_attachments=False)
         if search_result:
             self.event_json = search_result.pop()
         else:
@@ -76,7 +76,7 @@ class EventToTransform(Transform):
 
     def gen_response_objects(self):
         for o in self.event_json['Event']['Object']:
-            self.response += object_to_entity(o)
+            self.response += self.conn.object_to_entity(o)
 
     def gen_response_relations(self):
         for e in self.event_json['Event']['RelatedEvent']:
@@ -169,14 +169,14 @@ class ObjectToAttributes(Transform):
     def do_transform(self, request, response, config):
         response += check_update(config)
         maltego_object = request.entity
-        misp = get_misp_connection(config, request.parameters)
-        event_json = misp.get_event(maltego_object.event_id)
+        conn = MISPConnection(config, request.parameters)
+        event_json = conn.misp.get_event(maltego_object.event_id)
         for o in event_json['Event']['Object']:
             if o['uuid'] == maltego_object.uuid:
                 for entity in object_to_attributes(o, event_json):
                     if entity:
                         response += entity
-                for entity in object_to_relations(o, event_json):
+                for entity in conn.object_to_relations(o, event_json):
                     if entity:
                         response += entity
 
@@ -192,11 +192,11 @@ class ObjectToRelations(Transform):
     def do_transform(self, request, response, config):
         response += check_update(config)
         maltego_object = request.entity
-        misp = get_misp_connection(config, request.parameters)
-        event_json = misp.get_event(maltego_object.event_id)
+        conn = MISPConnection(config, request.parameters)
+        event_json = conn.misp.get_event(maltego_object.event_id)
         for o in event_json['Event']['Object']:
             if o['uuid'] == maltego_object.uuid:
-                for entity in object_to_relations(o, event_json):
+                for entity in conn.object_to_relations(o, event_json):
                     if entity:
                         response += entity
 

@@ -18,7 +18,6 @@ __version__ = '1.4.4'  # also update version in setup.py
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
-misp_connection = None
 update_url = 'https://raw.githubusercontent.com/MISP/MISP-maltego/master/setup.py'
 local_path_root = os.path.join(tempfile.gettempdir(), 'MISP-maltego')
 local_path_version = os.path.join(local_path_root, 'versioncheck')
@@ -64,37 +63,116 @@ def check_update(config):
     return None
 
 
-def get_misp_connection(config=None, parameters=None):
-    global misp_connection
-    if misp_connection:
-        return misp_connection
-    if not config:
-        raise MaltegoException("ERROR: MISP connection not yet established, and config not provided as parameter.")
-    misp_verify = True
-    misp_debug = False
-    misp_url = None
-    misp_key = None
-    try:
-        if is_local_exec_mode():
-            misp_url = config['MISP_maltego.local.misp_url']
-            misp_key = config['MISP_maltego.local.misp_key']
-            if config['MISP_maltego.local.misp_verify'] in ['False', 'false', 0, 'no', 'No']:
-                misp_verify = False
-            if config['MISP_maltego.local.misp_debug'] in ['True', 'true', 1, 'yes', 'Yes']:
-                misp_debug = True
-        if is_remote_exec_mode():
+class MISPConnection():
+    def __init__(self, config=None, parameters=None):
+        self.misp = None
+
+        if not config:
+            raise MaltegoException("ERROR: MISP connection not yet established, and config not provided as parameter.")
+        misp_verify = True
+        misp_debug = False
+        misp_url = None
+        misp_key = None
+        try:
+            if is_local_exec_mode():
+                misp_url = config['MISP_maltego.local.misp_url']
+                misp_key = config['MISP_maltego.local.misp_key']
+                if config['MISP_maltego.local.misp_verify'] in ['False', 'false', 0, 'no', 'No']:
+                    misp_verify = False
+                if config['MISP_maltego.local.misp_debug'] in ['True', 'true', 1, 'yes', 'Yes']:
+                    misp_debug = True
+            else:
+                try:
+                    misp_url = parameters['mispurl'].value
+                    misp_key = parameters['mispkey'].value
+                except AttributeError:
+                    raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
+            self.misp = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug, tool='misp_maltego')
+        except Exception:
+            if is_local_exec_mode():
+                raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
+            else:
+                raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your settings (MISP URL and API key), and ensure the MISP server is reachable from the internet.")
+
+    def object_to_entity(self, o, link_label=None, link_direction=LinkDirection.InputToOutput):
+        # find a nice icon for it
+        try:
+            icon_url = mapping_object_icon[o['name']]
+        except KeyError:
+            # it's not in our mapping, just ignore and leave the default icon
+            icon_url = None
+        # Generate a human readable display-name:
+        # - find the first RequiredOneOf that exists
+        # - if none, use the first RequiredField
+        # LATER further finetune the human readable version of this object
+        o_template = self.misp.get_object_template(o['template_uuid'])
+        human_readable = None
+        try:
+            found = False
+            while not found:  # the while loop is broken once something is found, or the requiredOneOf has no elements left
+                required_ote_type = o_template['ObjectTemplate']['requirements']['requiredOneOf'].pop(0)
+                for ote in o_template['ObjectTemplateElement']:
+                    if ote['object_relation'] == required_ote_type:
+                        required_a_type = ote['type']
+                        break
+                for a in o['Attribute']:
+                    if a['type'] == required_a_type:
+                        human_readable = '{}:\n{}'.format(o['name'], a['value'])
+                        found = True
+                        break
+        except Exception:
+            pass
+        if not human_readable:
             try:
-                misp_url = parameters['mispurl'].value
-                misp_key = parameters['mispkey'].value
-            except AttributeError:
-                raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
-        misp_connection = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug, tool='misp_maltego')
-    except Exception:
-        if is_local_exec_mode():
-            raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
-        if is_remote_exec_mode():
-            raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your settings (MISP URL and API key), and ensure the MISP server is reachable from the internet.")
-    return misp_connection
+                found = False
+                parts = []
+                for required_ote_type in o_template['ObjectTemplate']['requirements']['required']:
+                    for ote in o_template['ObjectTemplateElement']:
+                        if ote['object_relation'] == required_ote_type:
+                            required_a_type = ote['type']
+                            break
+                    for a in o['Attribute']:
+                        if a['type'] == required_a_type:
+                            parts.append(a['value'])
+                            break
+                human_readable = '{}:\n{}'.format(o['name'], '|'.join(parts))
+            except Exception:
+                human_readable = o['name']
+        return MISPObject(
+            human_readable,
+            uuid=o['uuid'],
+            event_id=int(o['event_id']),
+            meta_category=o.get('meta_category'),
+            description=o.get('description'),
+            comment=o.get('comment'),
+            icon_url=icon_url,
+            link_label=link_label,
+            link_direction=link_direction,
+            bookmark=Bookmark.Green
+        )
+
+    def object_to_relations(self, o, e):
+        # process forward and reverse references, so just loop over all the objects of the event
+        if 'Object' in e['Event']:
+            for eo in e['Event']['Object']:
+                if 'ObjectReference' in eo:
+                    for ref in eo['ObjectReference']:
+                        # we have found original object. Expand to the related object and attributes
+                        if eo['uuid'] == o['uuid']:
+                            # the reference is an Object
+                            if ref.get('Object'):
+                                # get the full object in the event, as our objectReference included does not contain everything we need
+                                sub_object = get_object_in_event(ref['Object']['uuid'], e)
+                                yield self.object_to_entity(sub_object, link_label=ref['relationship_type'])
+                            # the reference is an Attribute
+                            if ref.get('Attribute'):
+                                ref['Attribute']['event_id'] = ref['event_id']   # LATER remove this ugly workaround - object can't be requested directly from MISP using the uuid, and to find a full object we need the event_id
+                                for item in attribute_to_entity(ref['Attribute'], link_label=ref['relationship_type']):
+                                    yield item
+
+                        # reverse-lookup - this is another objects relating the original object
+                        if ref['referenced_uuid'] == o['uuid']:
+                            yield self.object_to_entity(eo, link_label=ref['relationship_type'], link_direction=LinkDirection.OutputToInput)
 
 
 def entity_obj_to_entity(entity_obj, v, t, **kwargs):
@@ -176,65 +254,6 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
     # LATER : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
 
-def object_to_entity(o, link_label=None, link_direction=LinkDirection.InputToOutput):
-    misp = get_misp_connection()
-    # find a nice icon for it
-    try:
-        icon_url = mapping_object_icon[o['name']]
-    except KeyError:
-        # it's not in our mapping, just ignore and leave the default icon
-        icon_url = None
-    # Generate a human readable display-name:
-    # - find the first RequiredOneOf that exists
-    # - if none, use the first RequiredField
-    # LATER further finetune the human readable version of this object
-    o_template = misp.get_object_template(o['template_uuid'])
-    human_readable = None
-    try:
-        found = False
-        while not found:  # the while loop is broken once something is found, or the requiredOneOf has no elements left
-            required_ote_type = o_template['ObjectTemplate']['requirements']['requiredOneOf'].pop(0)
-            for ote in o_template['ObjectTemplateElement']:
-                if ote['object_relation'] == required_ote_type:
-                    required_a_type = ote['type']
-                    break
-            for a in o['Attribute']:
-                if a['type'] == required_a_type:
-                    human_readable = '{}:\n{}'.format(o['name'], a['value'])
-                    found = True
-                    break
-    except Exception:
-        pass
-    if not human_readable:
-        try:
-            found = False
-            parts = []
-            for required_ote_type in o_template['ObjectTemplate']['requirements']['required']:
-                for ote in o_template['ObjectTemplateElement']:
-                    if ote['object_relation'] == required_ote_type:
-                        required_a_type = ote['type']
-                        break
-                for a in o['Attribute']:
-                    if a['type'] == required_a_type:
-                        parts.append(a['value'])
-                        break
-            human_readable = '{}:\n{}'.format(o['name'], '|'.join(parts))
-        except Exception:
-            human_readable = o['name']
-    return MISPObject(
-        human_readable,
-        uuid=o['uuid'],
-        event_id=int(o['event_id']),
-        meta_category=o.get('meta_category'),
-        description=o.get('description'),
-        comment=o.get('comment'),
-        icon_url=icon_url,
-        link_label=link_label,
-        link_direction=link_direction,
-        bookmark=Bookmark.Green
-    )
-
-
 def object_to_attributes(o, e):
     # first process attributes from an object that belong together (eg: first-name + last-name), and remove them from the list
     if o['name'] == 'person':
@@ -246,30 +265,6 @@ def object_to_attributes(o, e):
     for a in o['Attribute']:
         for item in attribute_to_entity(a):
             yield item
-
-
-def object_to_relations(o, e):
-    # process forward and reverse references, so just loop over all the objects of the event
-    if 'Object' in e['Event']:
-        for eo in e['Event']['Object']:
-            if 'ObjectReference' in eo:
-                for ref in eo['ObjectReference']:
-                    # we have found original object. Expand to the related object and attributes
-                    if eo['uuid'] == o['uuid']:
-                        # the reference is an Object
-                        if ref.get('Object'):
-                            # get the full object in the event, as our objectReference included does not contain everything we need
-                            sub_object = get_object_in_event(ref['Object']['uuid'], e)
-                            yield object_to_entity(sub_object, link_label=ref['relationship_type'])
-                        # the reference is an Attribute
-                        if ref.get('Attribute'):
-                            ref['Attribute']['event_id'] = ref['event_id']   # LATER remove this ugly workaround - object can't be requested directly from MISP using the uuid, and to find a full object we need the event_id
-                            for item in attribute_to_entity(ref['Attribute'], link_label=ref['relationship_type']):
-                                yield item
-
-                    # reverse-lookup - this is another objects relating the original object
-                    if ref['referenced_uuid'] == o['uuid']:
-                        yield object_to_entity(eo, link_label=ref['relationship_type'], link_direction=LinkDirection.OutputToInput)
 
 
 def get_object_in_event(uuid, e):

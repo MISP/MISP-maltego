@@ -1,6 +1,6 @@
 from canari.maltego.transform import Transform
 from MISP_maltego.transforms.common.entities import MISPEvent, MISPGalaxy, ThreatActor, Software, AttackTechnique
-from MISP_maltego.transforms.common.util import check_update, get_misp_connection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
+from MISP_maltego.transforms.common.util import check_update, MISPConnection, galaxycluster_to_entity, get_galaxy_cluster, get_galaxies_relating, search_galaxy_cluster, mapping_galaxy_icon
 from canari.maltego.message import UIMessageType, UIMessage, LinkDirection
 
 
@@ -24,12 +24,12 @@ class GalaxyToEvents(Transform):
 
     def do_transform(self, request, response, config):
         response += check_update(config)
-        misp = get_misp_connection(config, request.parameters)
+        conn = MISPConnection(config, request.parameters)
         if request.entity.tag_name:
             tag_name = request.entity.tag_name
         else:
             tag_name = request.entity.value
-        events_json = misp.search(controller='events', tags=tag_name, with_attachments=False)
+        events_json = conn.misp.search(controller='events', tags=tag_name, with_attachments=False)
         for e in events_json:
             response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_direction=LinkDirection.OutputToInput)
         return response
