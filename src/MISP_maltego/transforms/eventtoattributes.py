@@ -106,6 +106,7 @@ class EventToAttributes(EventToTransform):
     def do_transform(self, request, response, config):
         if super().do_transform(request, response, config):
             self.gen_response_attributes()
+            self.gen_response_objects()
 
         return self.response
 

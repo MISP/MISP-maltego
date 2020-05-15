@@ -6,7 +6,6 @@ machine("misp.MISPEventToAttributes",
         paths {
             run("MISP_maltego.EventToAttributes")
             path {
-                run("MISP_maltego.EventToObjects")
                 run("MISP_maltego.ObjectToAttributes")
             }
         }
