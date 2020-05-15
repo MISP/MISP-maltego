@@ -45,7 +45,7 @@ class SearchInMISP(Transform):
             return response
 
         # From galaxy or Hashtag
-        if 'properties.mispgalaxy' in request.entity.fields or 'properties.temp' in request.entity.fields:
+        if 'properties.mispgalaxy' in request.entity.fields or 'properties.temp' in request.entity.fields or 'twitter.hashtag' in request.entity.fields:
             if request.entity.value == '-':
                 return response
             # First search in galaxies
@@ -64,7 +64,7 @@ class SearchInMISP(Transform):
                         response += new_entity
 
             # from Hashtag search also in tags
-            if 'properties.temp' in request.entity.fields:
+            if 'properties.temp' in request.entity.fields or 'twitter.hashtag' in request.entity.fields:
                 keyword = get_entity_property(request.entity, 'Temp')
                 if not keyword:
                     keyword = request.entity.value
@@ -157,13 +157,14 @@ class AttributeToEvent(Transform):
             else:
                 return response
         # from Hashtag
-        elif 'properties.temp' in request.entity.fields:
+        elif 'properties.temp' in request.entity.fields or 'twitter.hashtag' in request.entity.fields:
             tag_name = get_entity_property(request.entity, 'Temp')
             if not tag_name:
                 tag_name = request.entity.value
-            events_json = conn.misp.search(controller='events', tags=tag_name, with_attachments=False)
+            # TODO convert this to an index search to be much faster
+            events_json = conn.misp.search_index(tags=tag_name)
             for e in events_json:
-                response += event_to_entity(e, link_direction=LinkDirection.OutputToInput)
+                response += event_to_entity({'Event': e}, link_direction=LinkDirection.OutputToInput)
             return response
         # standard Entities (normal attributes)
         else:
