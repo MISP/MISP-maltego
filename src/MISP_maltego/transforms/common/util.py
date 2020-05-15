@@ -12,7 +12,7 @@ import requests
 import tempfile
 import time
 
-__version__ = '1.4.4'  # also update version in setup.py
+__version__ = '1.4.5'  # also update version in setup.py
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
