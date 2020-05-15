@@ -407,8 +407,8 @@ def event_to_entity(e, link_style=LinkStyle.Normal, link_label=None, link_direct
         link_style=link_style,
         link_label=link_label,
         link_direction=link_direction,
-        count_attributes=len(e['Event'].get('Attribute')),
-        count_objects=len(e['Event'].get('Object')),
+        count_attributes=len(e['Event'].get('Attribute') or ""),
+        count_objects=len(e['Event'].get('Object') or ""),
         notes=notes,
         bookmark=Bookmark.Green)
 
