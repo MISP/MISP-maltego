@@ -12,8 +12,6 @@ import requests
 import tempfile
 import time
 
-# FIXME from galaxy 'to MISP Event' is confusing
-
 __version__ = '1.4.4'  # also update version in setup.py
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
@@ -205,15 +203,15 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
 
     # complement the event tags with the attribute tags.
     if 'Tag' in a and not only_self:
-            for t in a['Tag']:
-                combined_tags.append(t['name'])
-                # ignore all misp-galaxies
-                if t['name'].startswith('misp-galaxy'):
-                    continue
-                # ignore all those we add as notes
-                if tag_matches_note_prefix(t['name']):
-                    continue
-                yield Hashtag(t['name'], bookmark=Bookmark.Green)
+        for t in a['Tag']:
+            combined_tags.append(t['name'])
+            # ignore all misp-galaxies
+            if t['name'].startswith('misp-galaxy'):
+                continue
+            # ignore all those we add as notes
+            if tag_matches_note_prefix(t['name']):
+                continue
+            yield Hashtag(t['name'], bookmark=Bookmark.Green)
 
     notes = convert_tags_to_note(combined_tags)
 
@@ -251,7 +249,7 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
 
     # not supported in our maltego mapping are not handled
 
-    # LATER : relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
+    # LATER relationships from attributes - not yet supported by MISP yet, but there are references in the datamodel
 
 
 def object_to_attributes(o, e):
@@ -293,7 +291,7 @@ def get_attribute_in_object(o, attribute_type=False, attribute_value=False, drop
                 if drop:    # drop the attribute from the object
                     o['Attribute'].pop(i)
                 break
-        # TODO implement substring matching
+        # substring matching
         if substring:
             keyword = attribute_value.strip('%')
             if attribute_value.startswith('%') and attribute_value.endswith('%'):

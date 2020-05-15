@@ -16,9 +16,10 @@ __status__ = 'Development'
 
 
 class SearchInMISP(Transform):
-    """Search an attribute, event in MISP, allowing the use of % at the front and end"""
+    """Use % at the front/end for wildcard search"""
     input_type = Unknown
     display_name = 'Search in MISP'
+    description = "Use % at the front/end for wildcard search"
     remote = True
 
     def do_transform(self, request, response, config):
@@ -122,7 +123,7 @@ class SearchInMISP(Transform):
 
 class AttributeToEvent(Transform):
     input_type = Unknown
-    display_name = 'to MISP Event'
+    display_name = 'to MISP Events'
     remote = True
 
     def do_transform(self, request, response, config):
@@ -161,7 +162,6 @@ class AttributeToEvent(Transform):
             tag_name = get_entity_property(request.entity, 'Temp')
             if not tag_name:
                 tag_name = request.entity.value
-            # TODO convert this to an index search to be much faster
             events_json = conn.misp.search_index(tags=tag_name)
             for e in events_json:
                 response += event_to_entity({'Event': e}, link_direction=LinkDirection.OutputToInput)
