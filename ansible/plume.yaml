@@ -168,6 +168,29 @@
       name: plume
       state: started
 
+  # MONITORING
+  #############
+  - name: install munin
+    package:
+      name: ['munin', 'munin-node', 'munin-plugins-extra']
+
+  - name: munin - enabling plugins
+    file:
+      state: link
+      src: '/usr/share/munin/plugins/{{item}}'
+      dest: '/etc/munin/plugins/{{item}}'
+    loop:
+      - nginx_request
+      - nginx_status
+    notify: restart munin-node
+
+  - name: munin - service active and running
+    service:
+      name: munin-node
+      state: started
+      enabled: yes
+
+
   # FIREWALLING
   #############
   - name: firewall logging
@@ -224,4 +247,9 @@
     - name: restart nginx
       service:
         name: nginx
+        state: restarted
+
+    - name: restart munin-node
+      service:
+        name: munin-node
         state: restarted

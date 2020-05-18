@@ -1,4 +1,5 @@
 
+
 ![logo](https://raw.githubusercontent.com/MISP/MISP-maltego/master/doc/logo.png)
 
 This is a [Maltego](https://www.paterva.com/web7/) [MISP](https://www.misp-project.org) integration tool allowing you to view (read-only) data from a MISP instance. 
@@ -17,11 +18,13 @@ The currently supported entities are: `AS`, `DNSName`, `Domain`, `EmailAddress`,
 For MITRE ATT&CK pivoting, feel free to start with an `Attack Technique`, `Software`, `Threat Actor`, or `MISPGalaxy`. Create your entity, enter a keyword such as `%gama%` and use the `Search in MISP` transform to get started. 
 
 ## Installation
-### Remote Transform Installation
-This is coming soon. An entry will appear in the Transform Hub of Maltego, on which you can simply press the "install" button, and no local code needs to be installed. Your transforms will however go throught Paterva's servers and ours. See the [Transform Hub Disclaimer](https://github.com/MISP/MISP-maltego/blob/master/TRANSFORM_HUB_DISCLAIMER.md) for more information.
+### Transform Hub
+Open the Transform Hub, locate **ATT&CK - MISP** and press the **Install** button. 
 
-**For MISP specific transforms this requires your MISP server to be reachable from the internet!
-ATT&CK transforms do not require a MISP server or API key to be configured.**
+Your transforms will go through Paterva's servers and ours. See the [Transform Hub Disclaimer](https://github.com/MISP/MISP-maltego/blob/master/TRANSFORM_HUB_DISCLAIMER.md) for more information.
+
+- ATT&CK transforms do not require a MISP server or API key to be configured.
+- MISP transforms requires your MISP server to be reachable from the internet! To enter your MISP server URL and key click **Details** on the Transform Hub item and then **Settings** at the bottom right. 
 
 ### Local Transform Installation
 If you trust nobody, or just want to connect to your local MISP server you can install everything as local transforms.

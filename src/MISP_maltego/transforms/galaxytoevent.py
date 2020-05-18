@@ -15,26 +15,6 @@ __email__ = 'christophe@vandeplas.com'
 __status__ = 'Development'
 
 
-class GalaxyToEvents(Transform):
-    """Expands a Galaxy to multiple MISP Events."""
-
-    # The transform input entity type.
-    input_type = MISPGalaxy
-    remote = True
-
-    def do_transform(self, request, response, config):
-        response += check_update(config)
-        conn = MISPConnection(config, request.parameters)
-        if request.entity.tag_name:
-            tag_name = request.entity.tag_name
-        else:
-            tag_name = request.entity.value
-        events_json = conn.misp.search(controller='events', tags=tag_name, with_attachments=False)
-        for e in events_json:
-            response += MISPEvent(e['Event']['id'], uuid=e['Event']['uuid'], info=e['Event']['info'], link_direction=LinkDirection.OutputToInput)
-        return response
-
-
 class GalaxyToTransform(Transform):
     input_type = None
 
@@ -106,8 +86,8 @@ class GalaxyToTransform(Transform):
 
 
 class GalaxyToRelations(GalaxyToTransform):
-    """Expands a Galaxy to related Galaxies and Clusters"""
     input_type = MISPGalaxy
+    display_name = 'To Related Galaxies'
     remote = True
 
     def do_transform(self, request, response, config, type_filter=MISPGalaxy):
@@ -115,8 +95,8 @@ class GalaxyToRelations(GalaxyToTransform):
 
 
 class GalaxyToSoftware(GalaxyToTransform):
-    """Expands a Galaxy to related Software/Tool Galaxies"""
     input_type = MISPGalaxy
+    display_name = 'To Malware/Software/Tools'
     remote = True
 
     def do_transform(self, request, response, config, type_filter=Software):
@@ -124,8 +104,8 @@ class GalaxyToSoftware(GalaxyToTransform):
 
 
 class GalaxyToThreatActor(GalaxyToTransform):
-    """Expands a Galaxy to related ThreatActor Galaxies"""
     input_type = MISPGalaxy
+    display_name = 'To Threat Actors'
     remote = True
 
     def do_transform(self, request, response, config, type_filter=ThreatActor):
@@ -133,8 +113,8 @@ class GalaxyToThreatActor(GalaxyToTransform):
 
 
 class GalaxyToAttackTechnique(GalaxyToTransform):
-    """Expands a Galaxy to related Attack Techniques Galaxies"""
     input_type = MISPGalaxy
+    display_name = 'To Attack Techniques'
     remote = True
 
     def do_transform(self, request, response, config, type_filter=AttackTechnique):

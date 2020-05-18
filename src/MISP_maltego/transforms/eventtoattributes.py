@@ -85,6 +85,7 @@ class EventToTransform(Transform):
 
 class EventToAll(EventToTransform):
     input_type = MISPEvent
+    display_name = 'To All'
     description = 'Expands an Event to Attributes, Objects, Tags, Galaxies'
     remote = True
 
@@ -100,7 +101,7 @@ class EventToAll(EventToTransform):
 
 class EventToAttributes(EventToTransform):
     input_type = MISPEvent
-    description = 'Expands an Event to Attributes'
+    display_name = 'To Attributes/Objects'
     remote = True
 
     def do_transform(self, request, response, config):
@@ -113,6 +114,7 @@ class EventToAttributes(EventToTransform):
 
 class EventToTags(EventToTransform):
     input_type = MISPEvent
+    display_name = 'To Tags'
     description = 'Expands an Event to Tags and Galaxies'
     remote = True
 
@@ -126,7 +128,7 @@ class EventToTags(EventToTransform):
 
 class EventToGalaxies(EventToTransform):
     input_type = MISPEvent
-    description = 'Expands an Event to Galaxies'
+    display_name = 'To Galaxies / ATT&CK'
     remote = True
 
     def do_transform(self, request, response, config):
@@ -138,7 +140,7 @@ class EventToGalaxies(EventToTransform):
 
 class EventToObjects(EventToTransform):
     input_type = MISPEvent
-    description = 'Expands an Event to Objects'
+    display_name = 'To Objects'
     remote = True
 
     def do_transform(self, request, response, config):
@@ -150,7 +152,7 @@ class EventToObjects(EventToTransform):
 
 class EventToRelations(EventToTransform):
     input_type = MISPEvent
-    description = 'Expands an Event to related Events'
+    display_name = 'To Related Events'
     remote = True
 
     def do_transform(self, request, response, config):
@@ -161,9 +163,8 @@ class EventToRelations(EventToTransform):
 
 
 class ObjectToAttributes(Transform):
-    """"Expands an object to its attributes"""
     input_type = MISPObject
-    description = 'Expands an Object to Attributes'
+    display_name = 'To Attributes'
     remote = True
 
     def do_transform(self, request, response, config):
@@ -184,9 +185,8 @@ class ObjectToAttributes(Transform):
 
 
 class ObjectToRelations(Transform):
-    """Expands an object to the relations of the object"""
     input_type = MISPObject
-    description = 'Expands an Object to Relations'
+    display_name = 'To Related Objects'
     remote = True
 
     def do_transform(self, request, response, config):

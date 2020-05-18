@@ -123,7 +123,7 @@ class SearchInMISP(Transform):
 
 class AttributeToEvent(Transform):
     input_type = Unknown
-    display_name = 'to MISP Events'
+    display_name = 'To MISP Events'
     remote = True
 
     def do_transform(self, request, response, config):

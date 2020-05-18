@@ -1,0 +1,59 @@
+---
+# Install MISP-maltego remote transform using ansible.
+
+- hosts: all
+  become: yes
+  vars:
+    misp_maltego_version: 1.4.5  # TODO change this !!!
+    host_locale: en_US.UTF-8
+    host_locale_dict: {
+      LANG: "{{ host_locale }}",
+      LC_COLLATE: "{{ host_locale }}",
+      LC_CTYPE: "{{ host_locale }}",
+      LC_MESSAGES: "{{ host_locale }}",
+      LC_MONETARY: "{{ host_locale }}",
+      LC_NUMERIC: "{{ host_locale }}",
+      LC_TIME: "{{ host_locale }}",
+      LC_ALL: "{{ host_locale }}",
+    }
+
+  tasks:
+  # use the public pip package
+  - name: install MISP-maltego
+    pip:
+      executable: pip3
+      name: ['MISP-maltego']
+      state: latest
+    notify: restart plume
+
+  # use local git repo instead, useful for development
+  # - name: bundle MISP-maltego
+  #   delegate_to: 127.0.0.1
+  #   command: 
+  #     cmd: python3 setup.py sdist
+  #     chdir: ../
+  #   become: no
+  # - name: copy MISP-maltego
+  #   copy:
+  #     src: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     dest: /usr/local/src/
+  # - name: install MISP-maltego
+  #   pip:
+  #     executable: /usr/bin/pip3
+  #     name: file:///usr/local/src/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     state: forcereinstall
+  #   environment: "{{host_locale_dict}}"
+  #   notify: restart plume
+
+  # - name: remove local MISP-maltego bundle
+  #   delegate_to: 127.0.0.1
+  #   file:
+  #     path: ../dist/MISP_maltego-{{misp_maltego_version}}.tar.gz
+  #     state: absent
+  #   become: no
+
+  handlers:
+    - name: restart plume
+      service:
+        name: plume
+        state: restarted
