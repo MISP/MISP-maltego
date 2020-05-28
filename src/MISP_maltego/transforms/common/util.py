@@ -85,7 +85,7 @@ class MISPConnection():
                     misp_key = parameters['mispkey'].value
                 except AttributeError:
                     raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
-            self.misp = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug, tool='misp_maltego')
+            self.misp = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug, tool='misp_maltego', timeout=(2, 60))
         except Exception:
             if is_local_exec_mode():
                 raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
@@ -219,6 +219,7 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
     if a['type'] in ('url', 'uri'):
         yield(URL(url=a['value'], short_title=a['value'], link_label=link_label, notes=notes, bookmark=Bookmark.Green))
         return
+    # FIXME implement attachment screenshot type
 
     # attribute is from an object, and a relation gives better understanding of the type of attribute
     if a.get('object_relation') and mapping_misp_to_maltego.get(a['object_relation']):
