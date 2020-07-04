@@ -85,6 +85,7 @@ class SearchInMISP(Transform):
 
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
         # TODO First try to build the object, then only attributes (for those that are not in object, or for all?)
+        # TODO check for the right version of MISP before, it needs to be 2.4.127 or higher.
         # obj_json = conn.misp.search(controller='objects', value=request.entity.value, with_attachments=False)
         # for o in obj_json:
         #         for item in attribute_to_entity(attr, only_self=True, link_label=link_label):

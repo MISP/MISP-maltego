@@ -9,7 +9,7 @@ setup(
     name='MISP_maltego',
     author='Christophe Vandeplas',
     # also update version in util.py
-    version='1.4.5',
+    version='1.4.6',
     author_email='christophe@vandeplas.com',
     maintainer='Christophe Vandeplas',
     url='https://github.com/MISP/MISP-maltego',
