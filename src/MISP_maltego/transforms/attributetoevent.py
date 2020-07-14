@@ -82,19 +82,24 @@ class SearchInMISP(Transform):
 
         # for all other normal entities
         conn = MISPConnection(config, request.parameters)
-        events_json = conn.misp.search(controller='events', value=request.entity.value, with_attachments=False)
+
         # we need to do really rebuild the Entity from scratch as request.entity is of type Unknown
-        for e in events_json:
-            # find the value as attribute
-            attr = get_attribute_in_event(e, request.entity.value, substring=True)
-            if attr:
-                for item in attribute_to_entity(attr, only_self=True):
-                    response += item
-            # find the value as object, and return the object
-            if 'Object' in e['Event']:
-                for o in e['Event']['Object']:
-                    if get_attribute_in_object(o, attribute_value=request.entity.value, substring=True).get('value'):
-                        response += conn.object_to_entity(o, link_label=link_label)
+        # TODO First try to build the object, then only attributes (for those that are not in object, or for all?)
+        # TODO check for the right version of MISP before, it needs to be 2.4.127 or higher.
+        # obj_json = conn.misp.search(controller='objects', value=request.entity.value, with_attachments=False)
+        # for o in obj_json:
+        #         for item in attribute_to_entity(attr, only_self=True, link_label=link_label):
+        #             response += item
+        #     # find the value as object, and return the object
+        #     if 'Object' in e['Event']:
+        #         for o in e['Event']['Object']:
+        #             if get_attribute_in_object(o, attribute_value=request.entity.value, substring=True).get('value'):
+        #                 response += conn.object_to_entity(o, link_label=link_label)
+
+        attr_json = conn.misp.search(controller='attributes', value=request.entity.value, with_attachments=False)
+        for a in attr_json['Attribute']:
+            for item in attribute_to_entity(a, only_self=True, link_label=link_label):
+                response += item
 
         return response
 

@@ -9,7 +9,7 @@ setup(
     name='MISP_maltego',
     author='Christophe Vandeplas',
     # also update version in util.py
-    version='1.4.5',
+    version='1.4.6',
     author_email='christophe@vandeplas.com',
     maintainer='Christophe Vandeplas',
     url='https://github.com/MISP/MISP-maltego',
@@ -36,7 +36,7 @@ setup(
     python_requires='>=3.5',
     install_requires=[
         'canari>=3.3.10,<4',
-        'PyMISP>=2.4.114'
+        'PyMISP>=2.4.127'
     ],
     dependency_links=[
         # custom links for the install_requires

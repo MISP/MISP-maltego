@@ -12,7 +12,7 @@ import requests
 import tempfile
 import time
 
-__version__ = '1.4.5'  # also update version in setup.py
+__version__ = '1.4.6'  # also update version in setup.py
 
 tag_note_prefixes = ['tlp:', 'PAP:', 'de-vs:', 'euci:', 'fr-classif:', 'nato:']
 
@@ -85,7 +85,7 @@ class MISPConnection():
                     misp_key = parameters['mispkey'].value
                 except AttributeError:
                     raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
-            self.misp = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug, tool='misp_maltego')
+            self.misp = PyMISP(url=misp_url, key=misp_key, ssl=misp_verify, debug=misp_debug, tool='misp_maltego', timeout=(2, 60))
         except Exception:
             if is_local_exec_mode():
                 raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
@@ -219,6 +219,7 @@ def attribute_to_entity(a, link_label=None, event_tags=[], only_self=False):
     if a['type'] in ('url', 'uri'):
         yield(URL(url=a['value'], short_title=a['value'], link_label=link_label, notes=notes, bookmark=Bookmark.Green))
         return
+    # FIXME implement attachment screenshot type
 
     # attribute is from an object, and a relation gives better understanding of the type of attribute
     if a.get('object_relation') and mapping_misp_to_maltego.get(a['object_relation']):
@@ -444,9 +445,9 @@ def galaxycluster_to_entity(c, link_label=None, link_direction=LinkDirection.Inp
 
 # LATER this uses the galaxies from github as the MISP web UI does not fully support the Galaxies in the webui.
 # See https://github.com/MISP/MISP/issues/3801
-galaxy_archive_url = 'https://github.com/MISP/misp-galaxy/archive/master.zip'
+galaxy_archive_url = 'https://github.com/MISP/misp-galaxy/archive/main.zip'
 local_path_uuid_mapping = os.path.join(local_path_root, 'MISP_maltego_galaxy_mapping.json')
-local_path_clusters = os.path.join(local_path_root, 'misp-galaxy-master', 'clusters')
+local_path_clusters = os.path.join(local_path_root, 'misp-galaxy-main', 'clusters')
 galaxy_cluster_uuids = None
 
 
@@ -479,6 +480,8 @@ def galaxy_update_local_copy(force=False):
             zf.extractall(local_path_root)
             zf.close()
         except Exception:
+            # remove the lock
+            os.remove(lockfile)
             raise(MaltegoException("ERROR: Could not download Galaxy data from htts://github.com/MISP/MISP-galaxy/. Please check internet connectivity."))
 
         # generate the uuid mapping and save it to a file
