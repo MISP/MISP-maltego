@@ -85,7 +85,7 @@ class MISPConnection():
                     misp_key = parameters['mispkey'].value
                 except AttributeError:
                     raise MaltegoException("ERROR: mispurl and mispkey need to be set to something valid")
-            self.misp = PyMISP(misp_url, misp_key, misp_verify, 'json', misp_debug, tool='misp_maltego', timeout=(2, 60))
+            self.misp = PyMISP(url=misp_url, key=misp_key, ssl=misp_verify, debug=misp_debug, tool='misp_maltego', timeout=(2, 60))
         except Exception:
             if is_local_exec_mode():
                 raise MaltegoException("ERROR: Cannot connect to MISP server. Please verify your MISP_Maltego.conf settings.")
