@@ -9,7 +9,7 @@ We do keep standard HTTP logs for troubleshooting and anonymous statistics, alth
 
 **DO NOT use these Transform Hub transforms if you do not agree or if this is in violation with your MISP community.**
 
-**If so, feel free to use the MISP-Maltego transforms locally, where all the code runs on your own system. Installation instructions can be found [here](https://github.com/MISP/MISP-maltego/blob/master/doc/README.md#installation).**
+**If so, feel free to use the MISP-Maltego transforms locally, where all the code runs on your own system. Installation instructions can be found [here](https://github.com/MISP/MISP-maltego/blob/master/README.md#installation).**
 
 You can also run this on your own iTDS server if you have the license. Have a look at the [Dockerfile](https://github.com/MISP/MISP-maltego/blob/master/Dockerfile) for more info.
 
