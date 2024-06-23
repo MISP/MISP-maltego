@@ -126,7 +126,7 @@ You can see the amount of attributes and objects in the Event properties, so you
 ## License
 This software is licensed under [GNU Affero General Public License version 3](http://www.gnu.org/licenses/agpl-3.0.html)
 
-* Copyright (C) 20182-2024 Christophe Vandeplas
+* Copyright (C) 2018-2024 Christophe Vandeplas
 
 Note: Before being rewritten from scratch this project was maintained by Emmanuel Bouillon. The code is available in the `v1` branch.
 
